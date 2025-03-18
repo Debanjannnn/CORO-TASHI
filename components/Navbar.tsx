@@ -1,8 +1,8 @@
 "use client";
-import React from "react";
+import React, { Children } from "react";
 import { FloatingNav } from "../components/ui/floating-navbar";
 import { IconHome, IconBook, IconMessageCircle, IconUser } from "@tabler/icons-react";
-
+import Image from 'next/image'
 export default function FloatingNavDemo() {
   const navItems = [
     {
@@ -33,7 +33,6 @@ export default function FloatingNavDemo() {
   return (
     <div className="relative w-full pt-4">
       <FloatingNav navItems={navItems} />
-       
     </div>
   );
 }
