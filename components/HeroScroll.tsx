@@ -5,7 +5,7 @@ import { motion } from "framer-motion"
 
 export function HeroScrollDemo() {
   return (
-    <div className="flex flex-col overflow-hidden bg-black">
+    <div className="flex flex-col  overflow-hidden bg-black">
       <ContainerScroll
         titleComponent={
           <div className="relative z-10">
