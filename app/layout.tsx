@@ -26,11 +26,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-        <FloatingNavDemo/>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-     
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+          <FloatingNavDemo/>
         {children}
       </body>
     </html>
