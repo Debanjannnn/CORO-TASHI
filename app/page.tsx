@@ -4,6 +4,7 @@ import Features from "@/components/Features";
 import Footer from "@/components/Footer";
 import { HeroScrollDemo } from "@/components/HeroScroll";
 import FloatingNavDemo from "@/components/Navbar";
+import { FeaturesSection } from "@/components/VoFeatures";
 
 
 export default function Home() {
@@ -12,7 +13,8 @@ export default function Home() {
        <FloatingNavDemo/>
        <HeroScrollDemo/>
        {/* < CardHoverEffectDemo/> */}
-       <Features/>
+       <FeaturesSection/>
+       {/* <Features/> */}
        <Footer/>
     </div>
    
