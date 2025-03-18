@@ -1,6 +1,7 @@
 "use client"
 import { motion } from "framer-motion"
 import { ClipboardCopy, GitBranch, BarChart3, Settings } from "lucide-react"
+import React from "react"
 
 export function FeaturesSection() {
   const items = [
@@ -12,7 +13,7 @@ export function FeaturesSection() {
         </span>
       ),
       header: <SkeletonOne />,
-      className: "md:col-span-2",
+      className: "",
       icon: <ClipboardCopy className="h-4 w-4 text-orange-400" />,
     },
     {
@@ -23,7 +24,7 @@ export function FeaturesSection() {
         </span>
       ),
       header: <SkeletonTwo />,
-      className: "md:col-span-1",
+      className: "",
       icon: <GitBranch className="h-4 w-4 text-orange-400" />,
     },
     {
@@ -34,7 +35,7 @@ export function FeaturesSection() {
         </span>
       ),
       header: <SkeletonThree />,
-      className: "md:col-span-1",
+      className: "",
       icon: <BarChart3 className="h-4 w-4 text-orange-400" />,
     },
     {
@@ -45,13 +46,13 @@ export function FeaturesSection() {
         </span>
       ),
       header: <SkeletonFour />,
-      className: "md:col-span-2",
+      className: "",
       icon: <Settings className="h-4 w-4 text-orange-400" />,
     },
   ]
 
   return (
-    <section className="relative py-15 bg-black overflow-hidden">
+    <section className="relative pt-8 pb-20 bg-black overflow-hidden">
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
         <div className="absolute top-1/3 right-1/5 w-[250px] h-[250px] bg-orange-500/10 rounded-full blur-[120px]" />
@@ -61,7 +62,7 @@ export function FeaturesSection() {
         <div className="absolute inset-0 bg-[url('/placeholder.svg?height=2&width=2')] bg-[length:50px_50px] opacity-[0.03]"></div>
       </div>
 
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-4 max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -78,7 +79,7 @@ export function FeaturesSection() {
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {items.map((item, index) => (
             <motion.div
               key={index}
@@ -86,26 +87,34 @@ export function FeaturesSection() {
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               viewport={{ once: true }}
-              className={`group relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hover:border-orange-500/50 transition-all duration-300 ${item.className}`}
+              whileHover={{
+                y: -5,
+                transition: { duration: 0.2 },
+              }}
+              className={`group relative bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden hover:border-orange-500/50 transition-all duration-300 ${item.className}`}
             >
-              <div className="relative h-full">
+              <div className="relative h-full min-h-[220px]">
                 <div className="absolute inset-0 opacity-70 group-hover:opacity-100 transition-opacity duration-300">
                   {item.header}
                 </div>
                 <div className="relative z-10 p-6 h-full flex flex-col">
                   <div className="flex items-center mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center mr-3 border border-orange-500/20">
-                      {item.icon}
+                    <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center mr-3 border border-orange-500/20 group-hover:bg-orange-500/20 group-hover:scale-110 transition-all duration-300">
+                      {React.cloneElement(item.icon as React.ReactElement<any>, { className: "h-5 w-5 text-orange-400" })}
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                    <h3 className="text-xl font-semibold text-white group-hover:text-orange-300 transition-colors duration-300">
+                      {item.title}
+                    </h3>
                   </div>
-                  <div className="text-gray-400 mt-2">{item.description}</div>
+                  <div className="text-gray-400 mt-2 group-hover:text-gray-300 transition-colors duration-300">
+                    {item.description}
+                  </div>
 
                   <div className="mt-auto pt-4 flex items-center text-orange-400 text-sm font-medium">
                     Learn more
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-1"
+                      className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-2"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -128,27 +137,37 @@ function SkeletonOne() {
   return (
     <div className="w-full h-full bg-gradient-to-br from-black via-zinc-900 to-black">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-orange-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-orange-500/5 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-0 right-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl"></div>
 
-        {/* Decorative elements */}
-        <svg
-          className="absolute top-10 right-10 w-20 h-20 text-orange-500/20"
-          viewBox="0 0 200 200"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <path
-            fill="currentColor"
-            d="M44.5,-76.3C59.1,-69.9,73.1,-60.1,81.7,-46.2C90.3,-32.3,93.5,-14.3,90.8,2.7C88.2,19.7,79.7,35.8,68.3,48.1C56.9,60.5,42.7,69.2,27.4,74.8C12.1,80.4,-4.3,82.9,-19.6,79.1C-34.9,75.3,-49.1,65.2,-60.1,52.3C-71.1,39.4,-78.9,23.7,-81.3,6.6C-83.7,-10.5,-80.8,-29,-71.9,-43.2C-63,-57.4,-48.1,-67.3,-33.3,-73.8C-18.5,-80.3,-3.7,-83.4,9.8,-80.1C23.3,-76.8,29.9,-82.7,44.5,-76.3Z"
-            transform="translate(100 100)"
-          />
-        </svg>
+        {/* Animated circuit-like pattern */}
+        <div className="absolute inset-0 opacity-20">
+          <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M10,30 L30,30 L30,10 M70,10 L70,30 L90,30 M90,70 L70,70 L70,90 M30,90 L30,70 L10,70"
+              stroke="#f97316"
+              strokeWidth="0.5"
+              fill="none"
+              strokeDasharray="5,5"
+              className="animate-pulse"
+            />
+            <path
+              d="M40,20 L60,20 M20,40 L20,60 M40,80 L60,80 M80,40 L80,60"
+              stroke="#f97316"
+              strokeWidth="0.5"
+              fill="none"
+            />
+            <circle cx="50" cy="50" r="30" stroke="#f97316" strokeWidth="0.5" fill="none" opacity="0.3" />
+            <circle cx="50" cy="50" r="20" stroke="#f97316" strokeWidth="0.5" fill="none" opacity="0.5" />
+            <circle cx="50" cy="50" r="10" stroke="#f97316" strokeWidth="0.5" fill="none" opacity="0.7" />
+          </svg>
+        </div>
 
         <div className="absolute bottom-10 left-10 flex space-x-1">
-          <div className="w-2 h-8 bg-orange-500/30 rounded-full"></div>
-          <div className="w-2 h-12 bg-orange-500/40 rounded-full"></div>
-          <div className="w-2 h-6 bg-orange-500/30 rounded-full"></div>
-          <div className="w-2 h-10 bg-orange-500/40 rounded-full"></div>
+          <div className="w-2 h-8 bg-orange-500/30 rounded-full animate-pulse"></div>
+          <div className="w-2 h-12 bg-orange-500/40 rounded-full animate-pulse delay-100"></div>
+          <div className="w-2 h-6 bg-orange-500/30 rounded-full animate-pulse delay-200"></div>
+          <div className="w-2 h-10 bg-orange-500/40 rounded-full animate-pulse delay-300"></div>
         </div>
       </div>
     </div>
@@ -160,13 +179,37 @@ function SkeletonTwo() {
     <div className="w-full h-full bg-gradient-to-br from-black via-zinc-900 to-black">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-0 right-0 w-full h-full">
-          <svg
-            className="absolute top-5 left-5 w-24 h-24 text-orange-500/10"
-            viewBox="0 0 100 100"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="50" cy="50" r="40" stroke="currentColor" strokeWidth="8" fill="none" />
-          </svg>
+          {/* Network nodes visualization */}
+          <div className="absolute inset-0">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="2" fill="#f97316" opacity="0.5" />
+              <circle cx="80" cy="20" r="2" fill="#f97316" opacity="0.5" />
+              <circle cx="20" cy="80" r="2" fill="#f97316" opacity="0.5" />
+              <circle cx="80" cy="80" r="2" fill="#f97316" opacity="0.5" />
+              <circle cx="50" cy="50" r="3" fill="#f97316" opacity="0.8" />
+
+              <line x1="20" y1="20" x2="50" y2="50" stroke="#f97316" strokeWidth="0.3" opacity="0.3" />
+              <line x1="80" y1="20" x2="50" y2="50" stroke="#f97316" strokeWidth="0.3" opacity="0.3" />
+              <line x1="20" y1="80" x2="50" y2="50" stroke="#f97316" strokeWidth="0.3" opacity="0.3" />
+              <line x1="80" y1="80" x2="50" y2="50" stroke="#f97316" strokeWidth="0.3" opacity="0.3" />
+
+              <circle cx="20" cy="20" r="2" fill="#f97316" opacity="0.5">
+                <animate attributeName="r" values="2;3;2" dur="3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="80" cy="20" r="2" fill="#f97316" opacity="0.5">
+                <animate attributeName="r" values="2;3;2" dur="4s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="20" cy="80" r="2" fill="#f97316" opacity="0.5">
+                <animate attributeName="r" values="2;3;2" dur="5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="80" cy="80" r="2" fill="#f97316" opacity="0.5">
+                <animate attributeName="r" values="2;3;2" dur="6s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="50" cy="50" r="3" fill="#f97316" opacity="0.8">
+                <animate attributeName="r" values="3;4;3" dur="2s" repeatCount="indefinite" />
+              </circle>
+            </svg>
+          </div>
 
           <div className="absolute bottom-5 right-5">
             <div className="w-16 h-1 bg-orange-500/30 rounded-full mb-2"></div>
@@ -184,18 +227,30 @@ function SkeletonThree() {
     <div className="w-full h-full bg-gradient-to-br from-black via-zinc-900 to-black">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-20 h-20">
-            <div className="absolute inset-0 border-2 border-dashed border-orange-500/20 rounded-full animate-spin-slow"></div>
-            <div className="absolute inset-2 border-2 border-dashed border-orange-500/30 rounded-full animate-spin-slow-reverse"></div>
-            <div className="absolute inset-4 border-2 border-dashed border-orange-500/20 rounded-full animate-spin-slow"></div>
-            <div className="absolute inset-6 border-2 border-dashed border-orange-500/10 rounded-full animate-spin-slow-reverse"></div>
+          {/* Animated chart-like visualization */}
+          <div className="relative w-32 h-32">
+            <div className="absolute inset-0 border-2 border-dashed border-orange-500/20 rounded-full animate-spin"></div>
+            <div className="absolute inset-2 border-2 border-dashed border-orange-500/30 rounded-full animate-pulse"></div>
+            <div className="absolute inset-4 border-2 border-dashed border-orange-500/20 rounded-full animate-spin"></div>
+            <div className="absolute inset-6 border-2 border-dashed border-orange-500/10 rounded-full animate-pulse"></div>
+
+            <svg className="absolute inset-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <path d="M50,20 L50,80" stroke="#f97316" strokeWidth="0.5" opacity="0.3" />
+              <path d="M20,50 L80,50" stroke="#f97316" strokeWidth="0.5" opacity="0.3" />
+
+              <path d="M30,30 L70,70" stroke="#f97316" strokeWidth="0.5" opacity="0.3" />
+              <path d="M30,70 L70,30" stroke="#f97316" strokeWidth="0.5" opacity="0.3" />
+
+              <path d="M50,20 C70,30 70,70 50,80" stroke="#f97316" strokeWidth="1" fill="none" opacity="0.5" />
+              <path d="M50,20 C30,30 30,70 50,80" stroke="#f97316" strokeWidth="1" fill="none" opacity="0.5" />
+            </svg>
           </div>
         </div>
 
         <div className="absolute bottom-5 left-5 flex space-x-2">
-          <div className="w-3 h-3 rounded-full bg-orange-500/40"></div>
-          <div className="w-3 h-3 rounded-full bg-orange-500/20"></div>
-          <div className="w-3 h-3 rounded-full bg-orange-500/10"></div>
+          <div className="w-3 h-3 rounded-full bg-orange-500/40 animate-pulse"></div>
+          <div className="w-3 h-3 rounded-full bg-orange-500/20 animate-pulse delay-300"></div>
+          <div className="w-3 h-3 rounded-full bg-orange-500/10 animate-pulse delay-700"></div>
         </div>
       </div>
     </div>
@@ -206,20 +261,39 @@ function SkeletonFour() {
   return (
     <div className="w-full h-full bg-gradient-to-br from-black via-zinc-900 to-black">
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48">
+          {/* Settings/customization visualization */}
           <div className="absolute inset-0 border border-orange-500/20 rounded-lg"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-20 h-1 bg-gradient-to-r from-transparent via-orange-500/30 to-transparent"></div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center rotate-45">
-            <div className="w-20 h-1 bg-gradient-to-r from-transparent via-orange-500/20 to-transparent"></div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center rotate-90">
-            <div className="w-20 h-1 bg-gradient-to-r from-transparent via-orange-500/10 to-transparent"></div>
-          </div>
-          <div className="absolute inset-0 flex items-center justify-center rotate-135">
-            <div className="w-20 h-1 bg-gradient-to-r from-transparent via-orange-500/5 to-transparent"></div>
-          </div>
+
+          <svg className="absolute inset-0" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="50" cy="50" r="30" stroke="#f97316" strokeWidth="0.5" fill="none" opacity="0.2" />
+
+            <g opacity="0.6">
+              <circle cx="50" cy="20" r="3" fill="#f97316">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="80" cy="50" r="3" fill="#f97316">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" begin="0.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="50" cy="80" r="3" fill="#f97316">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" begin="1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="20" cy="50" r="3" fill="#f97316">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="3s" begin="1.5s" repeatCount="indefinite" />
+              </circle>
+            </g>
+
+            <path d="M50,20 L50,30" stroke="#f97316" strokeWidth="0.5" />
+            <path d="M80,50 L70,50" stroke="#f97316" strokeWidth="0.5" />
+            <path d="M50,80 L50,70" stroke="#f97316" strokeWidth="0.5" />
+            <path d="M20,50 L30,50" stroke="#f97316" strokeWidth="0.5" />
+
+            <circle cx="50" cy="50" r="10" stroke="#f97316" strokeWidth="1" fill="none">
+              <animate attributeName="r" values="10;12;10" dur="3s" repeatCount="indefinite" />
+            </circle>
+
+            <path d="M44,44 L56,56 M44,56 L56,44" stroke="#f97316" strokeWidth="1" />
+          </svg>
         </div>
 
         <div className="absolute top-5 right-5 grid grid-cols-2 gap-1">
@@ -232,4 +306,3 @@ function SkeletonFour() {
     </div>
   )
 }
-
