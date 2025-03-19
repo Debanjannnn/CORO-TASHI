@@ -16,11 +16,25 @@ export function FeaturesSection() {
       className: "",
       icon: <ClipboardCopy className="h-4 w-4 text-orange-400" />,
     },
+    // {
+    //   title: "Smart Liquidity Routing",
+    //   description: (
+    //     <span className="text-sm">
+    //       Multi-DEX integration with CoreDAO, Uniswap, Curve, and Aave with automatic slippage reduction.
+    //     </span>
+    //   ),
+    //   header: <SkeletonTwo />,
+    //   className: "",
+    //   icon: <GitBranch className="h-4 w-4 text-orange-400" />,
+    // },
+
     {
-      title: "Smart Liquidity Routing",
+      title: "Multi-Pool Staking System",
       description: (
         <span className="text-sm">
-          Multi-DEX integration with CoreDAO, Uniswap, Curve, and Aave with automatic slippage reduction.
+          Support for multiple staking pools with different tokens
+          Each pool can have unique APY rates and configurations
+          Separate staked and reward tokens per pool.
         </span>
       ),
       header: <SkeletonTwo />,
@@ -71,11 +85,11 @@ export function FeaturesSection() {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
-            Powerful <span className="text-orange-500">Features</span>
+            WHY CHOOSE <span className="text-orange-500">CORO TASHI?</span>
           </h2>
           <div className="w-20 h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent mx-auto mb-6"></div>
           <p className="text-gray-400 max-w-2xl mx-auto">
-            Cutting-edge technology to maximize your yield and optimize your investments in the CoreDAO ecosystem.
+          Stake your assets, multiply your power, and reign over DeFi—because the future doesn’t wait, and neither should you.
           </p>
         </motion.div>
 

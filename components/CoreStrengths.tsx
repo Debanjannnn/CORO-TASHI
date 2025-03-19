@@ -17,7 +17,7 @@ export function CoreStrengths() {
             className="max-w-lg"
           >
             <h2 className="text-4xl md:text-5xl font-bold text-orange-500 mb-6 uppercase tracking-tight">
-              CORE CHAIN'S STRENGTHS!
+              CORE CHAIN'S <span className="text-white">STRENGTHS!</span>
             </h2>
 
             <p className="text-white text-lg leading-relaxed mb-8">
