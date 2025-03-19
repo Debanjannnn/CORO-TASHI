@@ -5,12 +5,12 @@ import { IconHome, IconBook, IconMessageCircle, IconUser } from "@tabler/icons-r
 import Image from 'next/image'
 export default function FloatingNavDemo() {
   const navItems = [
-    {
-      name: "Home",
-      link: "",
-      id: "hero",
-      icon: <IconHome className="h-5 w-5 text-neutral-500 dark:text-white" />,
-    },
+    // {
+    //   name: "Home",
+    //   link: "",
+    //   id: "hero",
+    //   icon: <IconHome className="h-5 w-5 text-neutral-500 dark:text-white" />,
+    // },
     {
       name: "Features",
       link: "",
@@ -18,9 +18,9 @@ export default function FloatingNavDemo() {
       icon: <IconBook className="h-5 w-5 text-neutral-500 dark:text-white" />,
     },
     {
-      name: "FAQ",
+      name: "Docs",
       link: "",
-      id: "faq",
+      id: "DOCS",
       icon: <IconUser className="h-5 w-5 text-neutral-500 dark:text-white" />,
     },
     {
@@ -31,7 +31,7 @@ export default function FloatingNavDemo() {
     },
   ];
   return (
-    <div className="relative w-full pt-4">
+    <div className="relative w-full pt-4 bg-black">
       <FloatingNav navItems={navItems} />
     </div>
   );
