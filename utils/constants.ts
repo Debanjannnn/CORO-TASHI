@@ -1,5 +1,11 @@
 import { ethers } from "ethers";
 
+declare global {
+    interface Window {
+        ethereum: any;
+    }
+}
+
 export const CONTRACT_ADDRESS: string = "0x802F663D2Ab061a479dA4F3F95ae5cB3871539A4";
 export const REWARD_TOKEN_ADDRESS: string = "";
 
