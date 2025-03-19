@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 import { Settings, Plus, Edit3, TrendingUp } from 'lucide-react';
 import abi from "@/utils/abi"
 
-export const CONTRACT_ADDRESS = "0xae55C3E2727259b688aE03c23d7cE2D559De7102";
+const CONTRACT_ADDRESS = "0xae55C3E2727259b688aE03c23d7cE2D559De7102";
 
 const Admin = () => {
   const [pools, setPools] = useState([]);
