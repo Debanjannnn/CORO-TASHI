@@ -5,6 +5,8 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 import { JSX } from "react/jsx-runtime";
+import { useCoroTashi } from "@/context/CoroTashiContext";
+import { useRouter } from "next/navigation";
 
 export const FloatingNav = ({
   navItems,
@@ -21,6 +23,9 @@ export const FloatingNav = ({
   const { scrollYProgress } = useScroll();
   const [visible, setVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+
+  const { connectWallet, isConnected } = useCoroTashi();
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,6 +39,29 @@ export const FloatingNav = ({
       }, 100);
     }
   });
+
+  const handleStake = async() => {
+    try {
+      // Check if wallet is already connected
+      if (!isConnected) {
+        console.log("Wallet not connected, attempting to connect...");
+        await connectWallet();
+        
+        // Verify connection was successful before proceeding
+        if (!isConnected) {
+          console.log("Wallet connection failed or was cancelled");
+          return; // Exit early if connection failed
+        }
+      }
+      
+      console.log("Wallet connected, redirecting to dashboard...");
+      router.push("/dashboard");
+    } catch (error) {
+      console.error("Error in handleStake:", error);
+      // You might want to add user feedback here, such as a toast notification
+      alert("Failed to connect wallet. Please try again.");
+    }
+  }
 
   return (
     <AnimatePresence mode="wait">
@@ -74,10 +102,10 @@ export const FloatingNav = ({
             </Link>
           ))}
 
-        <button className="relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black">
+        <button  onClick={handleStake} className="relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black">
           <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#FFA500_0%,#000000_50%,#FFFFFF_100%)]" />
           <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-black px-5 py-1 text-xs font-medium text-white backdrop-blur-3xl relative">
-            <Link href="/dashboard">Stake</Link>
+            Stake
             <span className="absolute inset-x-0 w-1/2 mx-auto -bottom-px bg-gradient-to-r from-transparent via-orange-500 to-transparent h-px" />
           </span>
         </button>
