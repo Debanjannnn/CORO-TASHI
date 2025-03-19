@@ -17,19 +17,16 @@ export default function Footer() {
     {
       title: "Resources",
       links: [
-        { name: "Documentation", href: "#" },
-        { name: "Whitepaper", href: "#" },
-        { name: "API", href: "#" },
+        { name: "Documentation", href: "https://kaushiks-organization.gitbook.io/coro-tashi" },
         { name: "Tutorials", href: "#" },
       ],
     },
     {
       title: "Community",
       links: [
-        { name: "Discord", href: "#" },
-        { name: "Twitter", href: "#" },
-        { name: "GitHub", href: "#" },
-        { name: "Forum", href: "#" },
+        { name: "Twitter", href: "https://x.com/CoroTashi" },
+        { name: "GitHub", href: "https://github.com/PepsiCola-kulfi/CORO-TASHI" },
+
       ],
     },
     {
@@ -44,9 +41,8 @@ export default function Footer() {
   ]
 
   const socialLinks = [
-    { name: "Twitter", icon: Twitter, href: "#" },
-    { name: "Discord", icon: Discord, href: "#" },
-    { name: "GitHub", icon: Github, href: "#" },
+    { name: "Twitter", icon: Twitter, href: "https://x.com/CoroTashi" },
+    { name: "GitHub", icon: Github, href: "https://github.com/PepsiCola-kulfi/CORO-TASHI" },
   ]
 
   return (
