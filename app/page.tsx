@@ -11,7 +11,7 @@ import { FeaturesSection } from "@/components/VoFeatures";
 
 export default function Home() {
   return (
-    <div className="bg-black">
+    <div >
        <FloatingNavDemo/>
        <HeroScrollDemo/>
        <CoreStrengths/>
