@@ -162,7 +162,7 @@ const UserDashboard = () => {
           stakedToken: pool.stakedToken,
           rewardToken: pool.rewardToken,
           totalStaked: ethers.formatEther(pool.totalStaked),
-          APY: Number(pool.APY) / 100,
+          APY: Number(pool.APY),
           lockDays: Number(pool.lockDays),
           userStaked: ethers.formatEther(userInfo.amount),
           pendingReward: ethers.formatEther(pendingReward),
