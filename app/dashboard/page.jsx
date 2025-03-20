@@ -1,628 +1,836 @@
-"use client";
-import React, { useState, useEffect, useCallback } from 'react';
-import { ethers } from 'ethers';
-import abi from '@/utils/abi'; // Path to your ABI file
-import { CONTRACT_ADDRESS } from '@/utils/constants';
-import { toast } from 'sonner';
-
+"use client"
+import { useState, useEffect } from "react"
+import { ethers } from "ethers"
+import {
+  Wallet,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  CheckCircle,
+  RefreshCw,
+  Lock,
+  Unlock,
+  Plus,
+  Minus,
+  Award,
+} from "lucide-react"
+import { CONTRACT_ADDRESS } from "@/utils/constants"
+import abi from "@/utils/abi"
+import ERC20_ABI from "@/utils/erc20abi"
 
 const UserDashboard = () => {
-  // State variables
-  const [account, setAccount] = useState('');
-  const [contract, setContract] = useState(null);
-  const [provider, setProvider] = useState(null);
-  const [signer, setSigner] = useState(null);
-  const [pools, setPools] = useState([]);
-  const [userStakes, setUserStakes] = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [approving, setApproving] = useState(false);
-  const [depositing, setDepositing] = useState(false);
-  const [withdrawing, setWithdrawing] = useState(false);
-  const [claiming, setClaiming] = useState(false);
-  const [notificationCreating, setNotificationCreating] = useState(false);
+  const [account, setAccount] = useState(null)
+  const [isConnected, setIsConnected] = useState(false)
+  const [provider, setProvider] = useState(null)
+  const [signer, setSigner] = useState(null)
+  const [contract, setContract] = useState(null)
+  const [pools, setPools] = useState([])
+  const [notifications, setNotifications] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [success, setSuccess] = useState(null)
+  const [activePool, setActivePool] = useState(0)
+  const [isDepositing, setIsDepositing] = useState(false)
+  const [isWithdrawing, setIsWithdrawing] = useState(false)
+  const [isClaiming, setIsClaiming] = useState(false)
+  const [isEmergencyWithdrawing, setIsEmergencyWithdrawing] = useState(false)
+  const [isApproving, setIsApproving] = useState(false)
+  const [depositAmount, setDepositAmount] = useState("")
+  const [withdrawAmount, setWithdrawAmount] = useState("")
+  const [tokenBalances, setTokenBalances] = useState({})
+  const [tokenAllowances, setTokenAllowances] = useState({})
+  const [tokenSymbols, setTokenSymbols] = useState({})
 
-  // Form states
-  const [depositAmount, setDepositAmount] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [selectedPool, setSelectedPool] = useState(0);
-  const [notificationMessage, setNotificationMessage] = useState('');
-  const [notificationAmount, setNotificationAmount] = useState('');
-  const [approvalRequired, setApprovalRequired] = useState(false);
-    // New state for user balance
-  const [stakedTokenBalance, setStakedTokenBalance] = useState('0');
-    const [stakedTokenContract, setStakedTokenContract] = useState(null);
-  // Contract address - Update this with your actual deployed contract address
-; // Replace with actual contract address
-
-  // ERC20 ABI (minimal for approval)
-  const ERC20_ABI = [
-    "function approve(address spender, uint256 amount) external returns (bool)",
-    "function allowance(address owner, address spender) external view returns (uint256)",
-        "function balanceOf(address account) external view returns (uint256)",
-        "function decimals() external view returns (uint8)",
-        "function symbol() external view returns (string)",
-  ];
-
-  // Connect to wallet and contract
   const connectWallet = async () => {
     try {
-      if (window.ethereum) {
-        setLoading(true); // Start loading indicator
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        const signer = await provider.getSigner();
-        const account = await signer.getAddress();
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, abi, signer);
-
-        setProvider(provider);
-        setSigner(signer);
-        setAccount(account);
-        setContract(contract);
-
-        // Load data after connecting
-        await loadData(contract, account);
+      setLoading(true)
+      if (typeof window.ethereum !== "undefined") {
+        const providerInstance = new ethers.BrowserProvider(window.ethereum)
+        setProvider(providerInstance)
+        const accounts = await providerInstance.send("eth_requestAccounts", [])
+        const signerInstance = await providerInstance.getSigner()
+        setAccount(accounts[0])
+        setSigner(signerInstance)
+        setIsConnected(true)
+        const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, abi, signerInstance)
+        setContract(contractInstance)
+        await fetchData(contractInstance, accounts[0], signerInstance)
       } else {
-        setError('Please install MetaMask to use this dApp');
-        toast.error('Please install MetaMask to use this dApp'); // Toast notification
+        setError("Please install MetaMask to use this dApp")
       }
     } catch (err) {
-      console.error('Error connecting wallet:', err);
-      setError('Failed to connect wallet');
-      toast.error('Failed to connect wallet'); // Toast notification
+      console.error("Error connecting wallet:", err)
+      setError("Failed to connect wallet. " + (err.message || ""))
     } finally {
-      setLoading(false); // Stop loading indicator, regardless of success/failure
+      setLoading(false)
     }
-  };
+  }
 
-    const fetchStakedTokenBalance = useCallback(async (tokenAddress, account) => {
-        if (!signer || !tokenAddress || !account) return;
+  const fetchData = async (contractInstance, userAccount, signerInstance) => {
+    try {
+      setLoading(true)
+      const poolCount = await contractInstance.poolCount()
+      const poolsData = []
+      const balances = {}
+      const allowances = {}
+      const symbols = {}
+
+      for (let i = 0; i < poolCount; i++) {
+        const pool = await contractInstance.poolInfo(i)
+        const userInfo = await contractInstance.userInfo(i, userAccount)
+        const pendingReward = await contractInstance.pendingReward(i, userAccount)
+
+        const stakedTokenContract = new ethers.Contract(pool.stakedToken, ERC20_ABI, signerInstance)
+        const rewardTokenContract = new ethers.Contract(pool.rewardToken, ERC20_ABI, signerInstance)
+
+        const stakedTokenBalance = await stakedTokenContract.balanceOf(userAccount)
+        balances[pool.stakedToken] = stakedTokenBalance
+
+        const tokenAllowance = await stakedTokenContract.allowance(userAccount, CONTRACT_ADDRESS)
+        allowances[pool.stakedToken] = tokenAllowance
 
         try {
-            const contract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-            setStakedTokenContract(contract);
-            const balance = await contract.balanceOf(account);
-            const decimals = await contract.decimals();
-            const formattedBalance = ethers.formatUnits(balance, decimals);
-            setStakedTokenBalance(formattedBalance);
-        } catch (error) {
-            console.error("Error fetching staked token balance:", error);
-            setStakedTokenBalance('0');
-            toast.error('Failed to fetch staked token balance.');
+          const stakedSymbol = await stakedTokenContract.symbol()
+          const rewardSymbol = await rewardTokenContract.symbol()
+          symbols[pool.stakedToken] = stakedSymbol
+          symbols[pool.rewardToken] = rewardSymbol
+        } catch (err) {
+          console.error("Error fetching token symbols:", err)
+          symbols[pool.stakedToken] = "???"
+          symbols[pool.rewardToken] = "???"
         }
-    }, [signer]);
-  // Load contract data
-  const loadData = async (contract, account) => {
-    try {
-      setLoading(true);
 
-      // Get pool count
-      const poolCount = await contract.poolCount();
+        const lockUntilTimestamp = Number(userInfo.lockUntil)
+        const currentTimestamp = Math.floor(Date.now() / 1000)
+        const isLocked = lockUntilTimestamp > currentTimestamp
+        const timeRemaining = isLocked ? lockUntilTimestamp - currentTimestamp : 0
 
-      // Load pool information
-      const poolsData = [];
-      for (let i = 0; i < poolCount; i++) {
-        const pool = await contract.poolInfo(i);
+        let lockTimeRemaining = ""
+        if (timeRemaining > 0) {
+          const days = Math.floor(timeRemaining / 86400)
+          const hours = Math.floor((timeRemaining % 86400) / 3600)
+          const minutes = Math.floor((timeRemaining % 3600) / 60)
 
-        // Get user stake information for this pool
-        const userInfo = await contract.userInfo(i, account);
-
-        // Calculate pending rewards
-        const pendingRewards = await contract.pendingReward(i, account);
+          if (days > 0) {
+            lockTimeRemaining = `${days}d ${hours}h remaining`
+          } else if (hours > 0) {
+            lockTimeRemaining = `${hours}h ${minutes}m remaining`
+          } else {
+            lockTimeRemaining = `${minutes}m remaining`
+          }
+        }
 
         poolsData.push({
           id: i,
           stakedToken: pool.stakedToken,
           rewardToken: pool.rewardToken,
           totalStaked: ethers.formatEther(pool.totalStaked),
-          APY: pool.APY.toString() / 100, // Assuming APY is stored as percentage * 100
-          lockDays: pool.lockDays.toString(),
+          APY: Number(pool.APY) / 100,
+          lockDays: Number(pool.lockDays),
           userStaked: ethers.formatEther(userInfo.amount),
-          userRewards: ethers.formatEther(pendingRewards),
-          lockUntil: new Date(Number(userInfo.lockUntil) * 1000).toLocaleDateString(),
-          canWithdraw: Date.now() > Number(userInfo.lockUntil) * 1000
-        });
+          pendingReward: ethers.formatEther(pendingReward),
+          lockUntil: new Date(lockUntilTimestamp * 1000).toLocaleString(),
+          isLocked,
+          lockTimeRemaining,
+        })
       }
 
-      setPools(poolsData);
+      setPools(poolsData)
+      setTokenBalances(balances)
+      setTokenAllowances(allowances)
+      setTokenSymbols(symbols)
 
-      // Load notifications
-      const notificationsData = await contract.getNotifications();
-      setNotifications(notificationsData.map(notification => ({
-        poolId: notification.poolId.toString(),
+      const notificationsData = await contractInstance.getNotifications()
+      const formattedNotifications = notificationsData.map((notification) => ({
+        poolId: Number(notification.poolId),
         amount: ethers.formatEther(notification.amount),
         sender: notification.sender,
         message: notification.message,
-        timestamp: new Date(Number(notification.timestamp) * 1000).toLocaleString()
-      })));
+        timestamp: Number(notification.timestamp) * 1000,
+      }))
 
-      setLoading(false);
+      setNotifications(formattedNotifications)
     } catch (err) {
-      console.error('Error loading data:', err);
-      setError('Failed to load contract data');
-      toast.error('Failed to load contract data'); // Toast notification
+      console.error("Error fetching data:", err)
+      setError("Failed to fetch data from contract")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  const checkApproval = async (poolId, amountInWei) => {
-    if (!signer || !pools[poolId]) return false;
+  const refreshData = async () => {
+    if (contract && account && signer) {
+      await fetchData(contract, account, signer)
+    }
+  }
+
+  const checkApprovalNeeded = (poolId, amount) => {
+    if (!pools[poolId]) return true
+
+    const stakedToken = pools[poolId].stakedToken
+    const allowance = tokenAllowances[stakedToken]
+
+    if (!amount || amount === "" || isNaN(Number(amount)) || Number(amount) <= 0) {
+      return false
+    }
 
     try {
-      const stakedTokenContract = new ethers.Contract(pools[poolId].stakedToken, ERC20_ABI, signer);
-      const allowance = await stakedTokenContract.allowance(account, CONTRACT_ADDRESS);
-
-      return allowance.lt(amountInWei); // True if approval is needed
-    } catch (error) {
-      console.error("Error checking approval:", error);
-      setError("Error checking token allowance");
-      toast.error("Error checking token allowance");
-      return false; // Assume approval needed in case of error
-    }
-  };
-
-  const handleApprove = async () => {
-    try {
-      setApproving(true);
-      const amountInWei = ethers.parseEther(depositAmount);
-
-      const stakedTokenContract = new ethers.Contract(pools[selectedPool].stakedToken, ERC20_ABI, signer);
-      const tx = await stakedTokenContract.approve(CONTRACT_ADDRESS, amountInWei);
-      await tx.wait();
-
-      toast.success("Token approval successful!");
-      await loadData(contract, account);
-      setApprovalRequired(false); // Update approval state
+      const amountWei = ethers.parseEther(amount)
+      return allowance < amountWei
     } catch (err) {
-      console.error("Error approving tokens:", err);
-      setError("Failed to approve tokens");
-      toast.error("Failed to approve tokens");
-    } finally {
-      setApproving(false);
+      console.error("Error parsing amount:", err)
+      return true
     }
-  };
-  
-    // New function to set max deposit amount
-    const setMaxDeposit = () => {
-        setDepositAmount(stakedTokenBalance);
-    };
+  }
 
-    useEffect(() => {
-        if (pools.length > 0 && pools[selectedPool] && account && signer) {
-            fetchStakedTokenBalance(pools[selectedPool].stakedToken, account);
-        }
-    }, [pools, selectedPool, account, signer, fetchStakedTokenBalance]);
-  // Deposit tokens
-  const handleDeposit = async (e) => {
-    e.preventDefault();
+  const handleApproveAndDeposit = async (e) => {
+    e.preventDefault()
+
     try {
-      setDepositing(true);
-      if (!contract || !depositAmount) return;
-
-        if (isNaN(Number(depositAmount)) || Number(depositAmount) <= 0) {
-            setError("Invalid deposit amount. Please enter a positive number.");
-            toast.error("Invalid deposit amount. Please enter a positive number.");
-            return;
-        }
-
-      // Convert the amount to wei
-      const amountInWei = ethers.parseEther(depositAmount);
-
-      const needsApproval = await checkApproval(selectedPool, amountInWei);
-      if (needsApproval) {
-        setApprovalRequired(true);
-        toast.warn("Token approval required before deposit");
-        return;
+      if (!depositAmount || isNaN(Number(depositAmount)) || Number(depositAmount) <= 0) {
+        setError("Please enter a valid deposit amount")
+        return
       }
 
-      // Deposit to the contract
-      const tx = await contract.deposit(selectedPool, amountInWei);
-      await tx.wait();
+      setIsDepositing(true)
 
-      toast.success("Deposit successful!");
-      // Refresh data
-      await loadData(contract, account);
-      setDepositAmount('');
+      const amountWei = ethers.parseEther(depositAmount)
+
+      if (checkApprovalNeeded(activePool, depositAmount)) {
+        setIsApproving(true)
+        const stakedToken = pools[activePool].stakedToken
+        const tokenContract = new ethers.Contract(stakedToken, ERC20_ABI, signer)
+        const txApprove = await tokenContract.approve(CONTRACT_ADDRESS, amountWei)
+        await txApprove.wait()
+
+        const newAllowance = await tokenContract.allowance(account, CONTRACT_ADDRESS)
+        setTokenAllowances((prev) => ({
+          ...prev,
+          [stakedToken]: newAllowance,
+        }))
+
+        setSuccess("Token approval successful, now depositing...")
+      }
+
+      const txDeposit = await contract.deposit(activePool, amountWei)
+      await txDeposit.wait()
+
+      setSuccess("Deposit successful")
+      setDepositAmount("")
+
+      await refreshData()
+
+      generateNotification("deposit", activePool, amountWei)
+
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      console.error('Error depositing tokens:', err);
-      setError('Failed to deposit tokens: ' + err.message);
-      toast.error('Failed to deposit tokens: ' + err.message);
+      console.error("Error depositing tokens:", err)
+      setError("Failed to deposit tokens: " + (err.message || ""))
     } finally {
-      setDepositing(false);
-      setApprovalRequired(false);
+      setIsDepositing(false)
+      setIsApproving(false)
     }
-  };
+  }
 
-  // Withdraw tokens
   const handleWithdraw = async (e) => {
-    e.preventDefault();
+    e.preventDefault()
+
     try {
-      setWithdrawing(true);
-      if (!contract || !withdrawAmount) return;
+      if (!withdrawAmount || isNaN(Number(withdrawAmount)) || Number(withdrawAmount) <= 0) {
+        setError("Please enter a valid withdrawal amount")
+        return
+      }
 
-      // Convert the amount to wei
-      const amountInWei = ethers.parseEther(withdrawAmount);
+      setIsWithdrawing(true)
 
-      // Withdraw from the contract
-      const tx = await contract.withdraw(selectedPool, amountInWei);
-      await tx.wait();
+      const amountWei = ethers.parseEther(withdrawAmount)
+      const tx = await contract.withdraw(activePool, amountWei)
+      await tx.wait()
 
-      toast.success("Withdrawal successful!");
-      // Refresh data
-      await loadData(contract, account);
-      setWithdrawAmount('');
+      setSuccess("Withdrawal successful")
+      setWithdrawAmount("")
+
+      await refreshData()
+
+      generateNotification("withdraw", activePool, amountWei)
+
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      console.error('Error withdrawing tokens:', err);
-      setError('Failed to withdraw tokens. Check if lock period has ended.');
-      toast.error('Failed to withdraw tokens. Check if lock period has ended.');
+      console.error("Error withdrawing tokens:", err)
+      setError("Failed to withdraw tokens. Make sure the lock period has ended.")
     } finally {
-      setWithdrawing(false);
+      setIsWithdrawing(false)
     }
-  };
+  }
 
-  // Claim rewards
+  const handleEmergencyWithdraw = async (poolId) => {
+    try {
+      setIsEmergencyWithdrawing(true)
+
+      const tx = await contract.emergencyWithdraw(poolId)
+      await tx.wait()
+
+      setSuccess("Emergency withdrawal successful. Note: A penalty was applied.")
+
+      await refreshData()
+
+      generateNotification("emergencyWithdraw", poolId)
+
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err) {
+      console.error("Error emergency withdrawing:", err)
+      setError("Failed to perform emergency withdrawal: " + (err.message || ""))
+    } finally {
+      setIsEmergencyWithdrawing(false)
+    }
+  }
+
   const handleClaimRewards = async (poolId) => {
     try {
-      setClaiming(true);
-      if (!contract) return;
+      setIsClaiming(true)
 
-      const tx = await contract.claimReward(poolId);
-      await tx.wait();
+      const tx = await contract.claimReward(poolId)
+      await tx.wait()
 
-      toast.success("Rewards claimed successfully!");
-      // Refresh data
-      await loadData(contract, account);
+      setSuccess("Rewards claimed successfully")
+
+      await refreshData()
+
+      generateNotification("claimReward", poolId)
+
+      setTimeout(() => setSuccess(null), 3000)
     } catch (err) {
-      console.error('Error claiming rewards:', err);
-      setError('Failed to claim rewards');
-      toast.error('Failed to claim rewards');
+      console.error("Error claiming rewards:", err)
+      setError("Failed to claim rewards: " + (err.message || ""))
     } finally {
-      setClaiming(false);
+      setIsClaiming(false)
     }
-  };
+  }
 
-  // Create notification
-  const handleCreateNotification = async (e) => {
-    e.preventDefault();
+  const generateNotification = async (type, poolId, amountWei = 0) => {
+    let message = ""
+    let amount = 0
+    const pool = pools.find((pool) => pool.id === poolId)
+
+    switch (type) {
+      case "deposit":
+        message = `You have deposited ${ethers.formatEther(amountWei)} ${tokenSymbols[pool.stakedToken]} tokens in Pool #${poolId}.`
+        amount = amountWei
+        break
+      case "withdraw":
+        message = `You have withdrawn ${ethers.formatEther(amountWei)} ${tokenSymbols[pool.stakedToken]} tokens from Pool #${poolId}.`
+        amount = amountWei
+        break
+      case "emergencyWithdraw":
+        message = `You have performed an emergency withdrawal from Pool #${poolId}. A penalty was applied.`
+        break
+      case "claimReward":
+        message = `You have claimed rewards from Pool #${poolId}.`
+        break
+      default:
+        return
+    }
+
     try {
-      setNotificationCreating(true);
-      if (!contract || !notificationMessage) return;
-
-      // Convert the amount to wei
-      const amountInWei = ethers.parseEther(notificationAmount || '0');
-
-      // Create notification
-      const tx = await contract.createNotification(selectedPool, amountInWei, notificationMessage);
-      await tx.wait();
-
-      toast.success("Notification created successfully!");
-      // Refresh data
-      await loadData(contract, account);
-      setNotificationMessage('');
-      setNotificationAmount('');
+      setNotifications((prevNotifications) => [
+        {
+          poolId: poolId,
+          amount: ethers.formatEther(amount),
+          sender: account,
+          message: message,
+          timestamp: Date.now(),
+        },
+        ...prevNotifications,
+      ])
     } catch (err) {
-      console.error('Error creating notification:', err);
-      setError('Failed to create notification');
-      toast.error('Failed to create notification');
-    } finally {
-      setNotificationCreating(false);
+      console.error("Error creating notification:", err)
+      setError("Failed to create notification: " + (err.message || ""))
     }
-  };
+  }
 
-  // Initial connection
+  const setMaxDeposit = () => {
+    if (!pools[activePool]) return
+
+    const stakedToken = pools[activePool].stakedToken
+    const balance = tokenBalances[stakedToken]
+
+    if (balance) {
+      setDepositAmount(ethers.formatEther(balance))
+    }
+  }
+
+  const setMaxWithdraw = () => {
+    if (!pools[activePool]) return
+
+    const userStaked = pools[activePool].userStaked
+    setWithdrawAmount(userStaked)
+  }
+
+  const formatAddress = (address) => {
+    if (!address) return ""
+    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`
+  }
+
+  const formatDate = (timestamp) => {
+    return new Date(timestamp).toLocaleString()
+  }
+
   useEffect(() => {
-    connectWallet();
+    if (typeof window.ethereum !== "undefined") {
+      const provider = new ethers.BrowserProvider(window.ethereum)
 
-    // Setup event listeners for MetaMask
-    if (window.ethereum) {
-      window.ethereum.on('accountsChanged', () => {
-        window.location.reload();
-      });
-      window.ethereum.on('chainChanged', () => {
-        window.location.reload();
-      });
+      provider
+        .send("eth_accounts", [])
+        .then((accounts) => {
+          if (accounts.length > 0) {
+            connectWallet()
+          }
+        })
+        .catch((err) => console.error("Error checking accounts:", err))
+
+      window.ethereum.on("accountsChanged", () => {
+        window.location.reload()
+      })
+
+      window.ethereum.on("chainChanged", () => {
+        window.location.reload()
+      })
     }
 
     return () => {
-      // Remove listeners
       if (window.ethereum) {
-        window.ethereum.removeAllListeners();
+        window.ethereum.removeAllListeners()
       }
-    };
-  }, []);
-
-  // Refresh data every 30 seconds
-  useEffect(() => {
-    if (contract && account) {
-      const interval = setInterval(() => {
-        loadData(contract, account);
-      }, 30000);
-
-      return () => clearInterval(interval);
     }
-  }, [contract, account]);
+  }, [])
 
-  // Helper to truncate addresses
-  const truncateAddress = (address) => {
-    return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
-  };
+  useEffect(() => {
+    if (contract && account && signer) {
+      const interval = setInterval(() => {
+        refreshData()
+      }, 30000)
+
+      return () => clearInterval(interval)
+    }
+  }, [contract, account, signer])
+
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null)
+      }, 5000)
+
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">CoroYami Staking Dashboard</h1>
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossOrigin="anonymous" referrerPolicy="no-referrer" />
-      {/* Wallet Connection */}
-      <div className="mb-6 p-4 border rounded">
-        {!account ? (
-          <button
-            onClick={connectWallet}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
-            disabled={loading}
-          >
-            {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i> Connecting...</> : "Connect Wallet"}
-          </button>
-        ) : (
-          <div>
-            <span>Connected: {truncateAddress(account)}</span>
-          </div>
-        )}
-      </div>
-      
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4 relative" role="alert">
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline">{error}</span>
-          <span className="absolute top-0 bottom-0 right-0 px-4 py-3">
-            <button onClick={() => setError('')}>
-              <svg className="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
-            </button>
-          </span>
-        </div>
-      )}
-      
-      {/* Loading State */}
-      {loading && (
-        <div className="flex items-center justify-center h-20">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="ml-3">Loading data...</span>
-        </div>
-      )}
-      
-      {/* Staking Pools */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-3">Staking Pools</h2>
-        
-        {!loading && pools.length === 0 && (
-          <div className="text-gray-500">No staking pools available</div>
-        )}
-        
-        {pools.map((pool) => (
-          <div key={pool.id} className="border rounded p-4 mb-4">
-            <h3 className="font-medium">Pool #{pool.id}</h3>
-            <div className="grid grid-cols-2 gap-2 mb-3">
-              <div>Staked Token: {truncateAddress(pool.stakedToken)}</div>
-              <div>Reward Token: {truncateAddress(pool.rewardToken)}</div>
-              <div>APY: {pool.APY}%</div>
-              <div>Lock Period: {pool.lockDays} days</div>
-              <div>Total Staked: {pool.totalStaked}</div>
-            </div>
-            
-            <div className="bg-gray-100 p-3 rounded">
-              <h4 className="font-medium">Your Position</h4>
-              <div className="grid grid-cols-2 gap-2">
-                <div>Staked: {pool.userStaked}</div>
-                <div>Pending Rewards: {pool.userRewards}</div>
-                <div>Locked Until: {pool.lockUntil}</div>
-              </div>
-              
-              <button
-                onClick={() => handleClaimRewards(pool.id)}
-                disabled={parseFloat(pool.userRewards) <= 0 || claiming}
-                className={`mt-3 px-4 py-2 rounded ${parseFloat(pool.userRewards) > 0 ? 'bg-green-500 hover:bg-green-700 text-white' : 'bg-gray-300 cursor-not-allowed'} disabled:opacity-50`}
-              >
-                {claiming ? <><i className="fas fa-spinner fa-spin mr-2"></i> Claiming...</> : "Claim Rewards"}
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {/* Deposit Form */}
-      <div className="mb-6 border rounded p-4">
-        <h2 className="text-xl font-semibold mb-3">Deposit Tokens</h2>
-            {pools[selectedPool] && stakedTokenContract ? (
-                <p className="mb-2">
-                    Your {pools[selectedPool].stakedToken} Balance: {stakedTokenBalance}
-                </p>
-            ) : (
-                <p className="mb-2">Loading Balance...</p>
-            )}
-        <form onSubmit={handleDeposit}>
-          <div className="mb-3">
-            <label className="block mb-1">Select Pool</label>
-            <select
-              value={selectedPool}
-              onChange={(e) => {
-                setSelectedPool(Number(e.target.value));
-                setDepositAmount(''); // Reset deposit amount when changing pools
-              }}
-              className="border rounded p-2 w-full"
-            >
-              {pools.map((pool) => (
-                <option key={pool.id} value={pool.id}>
-                  Pool #{pool.id} - {pool.APY}% APY
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="mb-3">
-            <label className="block mb-1">Amount</label>
-            <div className="flex">
-              <input
-                type="number"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
-                placeholder="0.0"
-                className="border rounded p-2 w-full mr-2"
-              />
-              <button
-                type="button"
-                onClick={setMaxDeposit}
-                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
-              >
-                Max
-              </button>
-            </div>
-          </div>
-          
-          {approvalRequired && (
-            <button
-              type="button"
-              onClick={handleApprove}
-              className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded mb-3 w-full disabled:opacity-50"
-              disabled={approving}
-            >
-              {approving ? <><i className="fas fa-spinner fa-spin mr-2"></i> Approving...</> : "Approve Tokens"}
-            </button>
-          )}
-          
-          <button
-            type="submit"
-            disabled={!account || !depositAmount || approvalRequired || depositing}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50"
-          >
-            {depositing ? <><i className="fas fa-spinner fa-spin mr-2"></i> Depositing...</> : "Deposit"}
-          </button>
-        </form>
-      </div>
-      
-      {/* Withdraw Form */}
-      <div className="mb-6 border rounded p-4">
-        <h2 className="text-xl font-semibold mb-3">Withdraw Tokens</h2>
-        <form onSubmit={handleWithdraw}>
-          <div className="mb-3">
-            <label className="block mb-1">Select Pool</label>
-            <select
-              value={selectedPool}
-              onChange={(e) => setSelectedPool(Number(e.target.value))}
-              className="border rounded p-2 w-full"
-            >
-              {pools.map((pool) => (
-                <option key={pool.id} value={pool.id}>
-                  Pool #{pool.id} - {pool.userStaked} staked
-                </option>
-              ))}
-            </select>
-          </div>
-          
-          <div className="mb-3">
-            <label className="block mb-1">Amount</label>
-            <input
-              type="text"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              placeholder="0.0"
-              className="border rounded p-2 w-full"
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={!account || !withdrawAmount || withdrawing}
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50"
-          >
-            {withdrawing ? <><i className="fas fa-spinner fa-spin mr-2"></i> Withdrawing...</> : "Withdraw"}
-          </button>
-          <div className="text-sm text-gray-500 mt-1">
-            Note: You can only withdraw after the lock period has ended
-          </div>
-        </form>
-      </div>
-      
-      {/* Notifications Section */}
-      <div className="mb-6 border rounded p-4">
-        <h2 className="text-xl font-semibold mb-3">Notifications</h2>
-        
-        {/* Create Notification Form */}
-        <div className="mb-4 border-b pb-4">
-          <h3 className="font-medium mb-2">Create New Notification</h3>
-          <form onSubmit={handleCreateNotification}>
-            <div className="mb-3">
-              <label className="block mb-1">Select Pool</label>
-              <select
-                value={selectedPool}
-                onChange={(e) => setSelectedPool(Number(e.target.value))}
-                className="border rounded p-2 w-full"
-              >
-                {pools.map((pool) => (
-                  <option key={pool.id} value={pool.id}>Pool #{pool.id}</option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="mb-3">
-              <label className="block mb-1">Amount (optional)</label>
-              <input
-                type="text"
-                value={notificationAmount}
-                onChange={(e) => setNotificationAmount(e.target.value)}
-                placeholder="0.0"
-                className="border rounded p-2 w-full"
-              />
-            </div>
-            
-            <div className="mb-3">
-              <label className="block mb-1">Message</label>
-              <textarea
-                value={notificationMessage}
-                onChange={(e) => setNotificationMessage(e.target.value)}
-                placeholder="Your message here..."
-                className="border rounded p-2 w-full"
-                rows="3"
-              />
-            </div>
-            
-            <button
-              type="submit"
-              disabled={!account || !notificationMessage || notificationCreating}
-              className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full disabled:opacity-50"
-            >
-              {notificationCreating ? <><i className="fas fa-spinner fa-spin mr-2"></i> Posting...</> : "Post Notification"}
-            </button>
-          </form>
-        </div>
-        
-        {/* Notifications List */}
-        <div>
-          <h3 className="font-medium mb-2">Recent Notifications</h3>
-          
-          {!loading && notifications.length === 0 && (
-            <div className="text-gray-500">No notifications yet</div>
-          )}
-          
-          {notifications.map((notification, index) => (
-            <div key={index} className="border-b last:border-b-0 py-3">
-              <div className="flex justify-between text-sm text-gray-500">
-                <span>Pool #{notification.poolId}</span>
-                <span>{notification.timestamp}</span>
-              </div>
-              <div className="mt-1">
-                <span className="font-medium">{truncateAddress(notification.sender)}</span>
-                {notification.amount !== '0.0' && (
-                  <span className="ml-2">Amount: {notification.amount}</span>
-                )}
-              </div>
-              <p className="mt-1">{notification.message}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
+    <main className="min-h-screen bg-black text-white">
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-0">
+            CORE <span className="text-orange-500">DAO</span> Dashboard
+          </h1>
 
-export default UserDashboard;
+          {!isConnected ? (
+            <button
+              onClick={connectWallet}
+              disabled={loading}
+              className="bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white font-medium py-2 px-6 rounded-full flex items-center transition-all duration-300 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-5 h-5 mr-2" />
+                  Connect Wallet
+                </>
+              )}
+            </button>
+          ) : (
+            <div className="flex items-center bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-full py-2 px-4">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              <span className="text-sm font-medium">{formatAddress(account)}</span>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <div className="mb-6 bg-red-900/30 border border-red-500/50 rounded-lg p-4 flex items-start">
+            <AlertTriangle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-red-400">Error</h3>
+              <p className="text-red-300">{error}</p>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-6 bg-green-900/30 border border-green-500/50 rounded-lg p-4 flex items-start">
+            <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-green-400">Success</h3>
+              <p className="text-green-300">{success}</p>
+            </div>
+          </div>
+        )}
+
+        {!isConnected ? (
+          <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-8 text-center">
+            <Wallet className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
+            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+              Connect your wallet to view your staking positions, deposit tokens, and claim rewards.
+            </p>
+            <button
+              onClick={connectWallet}
+              disabled={loading}
+              className="bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white font-medium py-3 px-8 rounded-full flex items-center mx-auto transition-all duration-300 disabled:opacity-50"
+            >
+              {loading ? (
+                <>
+                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  <Wallet className="w-5 h-5 mr-2" />
+                  Connect Wallet
+                </>
+              )}
+            </button>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold">Staking Pools</h2>
+                    <button
+                      onClick={refreshData}
+                      className="text-gray-400 hover:text-white p-2 rounded-full transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {pools.length === 0 ? (
+                    <div className="p-8 text-center text-gray-400">No staking pools available</div>
+                  ) : (
+                    <div className="divide-y divide-zinc-800">
+                      {pools.map((pool) => (
+                        <div
+                          key={pool.id}
+                          className={`p-4 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
+                            activePool === pool.id ? "bg-zinc-800/50" : ""
+                          }`}
+                          onClick={() => setActivePool(pool.id)}
+                        >
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="font-medium flex items-center">
+                              Pool #{pool.id}
+                              <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+                                {pool.APY}% APY
+                              </span>
+                            </h3>
+                            <div className="flex items-center text-sm text-gray-400">
+                              <Lock className="w-3 h-3 mr-1" />
+                              {pool.lockDays} days lock
+                            </div>
+                          </div>
+                            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                                <div>
+                                    <div className="text-gray-400">Staked Token Address:</div>
+                                    <div className="text-xs text-white">{formatAddress(pool.stakedToken)}</div>
+                                </div>
+                                <div>
+                                    <div className="text-gray-400">Reward Token Address:</div>
+                                    <div className="text-xs text-white">{formatAddress(pool.rewardToken)}</div>
+                                </div>
+                            </div>
+                          <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                            <div className="text-gray-400">
+                              Stake:
+                              <span className="ml-1 text-white">
+                                {tokenSymbols[pool.stakedToken] || formatAddress(pool.stakedToken)}
+                              </span>
+                            </div>
+                            <div className="text-gray-400">
+                              Reward:
+                              <span className="ml-1 text-white">
+                                {tokenSymbols[pool.rewardToken] || formatAddress(pool.rewardToken)}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div className="bg-zinc-800/50 rounded-lg p-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-sm text-gray-400">Your Position</span>
+                              {pool.isLocked ? (
+                                <span className="text-xs flex items-center text-orange-400">
+                                  <Clock className="w-3 h-3 mr-1" />
+                                  {pool.lockTimeRemaining}
+                                </span>
+                              ) : (
+                                <span className="text-xs flex items-center text-green-400">
+                                  <Unlock className="w-3 h-3 mr-1" />
+                                  Unlocked
+                                </span>
+                              )}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                              <div>
+                                <div className="text-xs text-gray-400">Staked</div>
+                                <div className="font-medium">
+                                  {Number.parseFloat(pool.userStaked).toFixed(4)} {tokenSymbols[pool.stakedToken]}
+                                </div>
+                              </div>
+                              <div>
+                                <div className="text-xs text-gray-400">Pending Rewards</div>
+                                <div className="font-medium text-orange-400">
+                                  {Number.parseFloat(pool.pendingReward).toFixed(4)} {tokenSymbols[pool.rewardToken]}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex space-x-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleClaimRewards(pool.id)
+                                }}
+                                disabled={Number.parseFloat(pool.pendingReward) <= 0 || isClaiming}
+                                className="text-xs bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-3 py-1.5 rounded-lg flex items-center transition-colors flex-1 justify-center"
+                              >
+                                {isClaiming && activePool === pool.id ? (
+                                  <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                                ) : (
+                                  <Award className="w-3 h-3 mr-1" />
+                                )}
+                                Claim Rewards
+                              </button>
+
+                              {Number.parseFloat(pool.userStaked) > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    handleEmergencyWithdraw(pool.id)
+                                  }}
+                                  disabled={isEmergencyWithdrawing}
+                                  className="text-xs bg-red-900/50 hover:bg-red-900 text-red-400 hover:text-white px-3 py-1.5 rounded-lg flex items-center transition-colors"
+                                >
+                                  {isEmergencyWithdrawing && activePool === pool.id ? (
+                                    <RefreshCw className="w-3 h-3 animate-spin mr-1" />
+                                  ) : (
+                                    <AlertTriangle className="w-3 h-3 mr-1" />
+                                  )}
+                                  Emergency
+                              </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden sticky top-4">
+                  <div className="p-4 border-b border-zinc-800">
+                    <h2 className="text-xl font-semibold">
+                      {pools[activePool] ? <>Pool #{activePool} Actions</> : <>Actions</>}
+                    </h2>
+                  </div>
+
+                  <div className="p-4">
+                    <div className="mb-6">
+                      <h3 className="font-medium mb-3 flex items-center">
+                        <Plus className="w-4 h-4 mr-1 text-green-400" />
+                        Deposit Tokens
+                      </h3>
+
+                      {pools[activePool] && (
+  <div className="mb-3 text-sm">
+    <div className="flex justify-between">
+      <span className="text-gray-400">Available Balance:</span>
+      <span>
+        {tokenBalances[pools[activePool].stakedToken] !== undefined ? (
+          <>
+            {ethers.formatEther(tokenBalances[pools[activePool].stakedToken]) === "0.0"
+              ? "0"
+              : ethers.formatEther(tokenBalances[pools[activePool].stakedToken])}{" "}
+            {tokenSymbols[pools[activePool].stakedToken]}
+          </>
+        ) : (
+          "0"
+        )}
+      </span>
+    </div>
+  </div>
+)}
+
+                      <form onSubmit={handleApproveAndDeposit}>
+                        <div className="mb-3">
+                          <div className="flex">
+                            <input
+                              type="text"
+                              value={depositAmount}
+                              onChange={(e) => setDepositAmount(e.target.value)}
+                              placeholder="0.0"
+                              className="bg-zinc-800 border border-zinc-700 rounded-l-lg p-2 w-full text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={setMaxDeposit}
+                              className="bg-zinc-700 hover:bg-zinc-600 text-white px-3 rounded-r-lg transition-colors"
+                            >
+                              MAX
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isDepositing || !depositAmount}
+                          className="w-full bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                        >
+                          {isApproving && isDepositing ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              Approving and Depositing...
+                            </>
+                          ) : isDepositing ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              Depositing...
+                            </>
+                          ) : (
+                            <>Deposit</>
+                          )}
+                        </button>
+                      </form>
+                    </div>
+
+                    <div>
+                      <h3 className="font-medium mb-3 flex items-center">
+                        <Minus className="w-4 h-4 mr-1 text-red-400" />
+                        Withdraw Tokens
+                      </h3>
+
+                      {pools[activePool] && (
+                        <div className="mb-3 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-gray-400">Staked Balance:</span>
+                            <span>
+                              {pools[activePool].userStaked} {tokenSymbols[pools[activePool].stakedToken]}
+                            </span>
+                          </div>
+
+                          {pools[activePool].isLocked && (
+                            <div className="mt-1 text-orange-400 flex items-center text-xs">
+                              <Lock className="w-3 h-3 mr-1" />
+                              {pools[activePool].lockTimeRemaining}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <form onSubmit={handleWithdraw}>
+                        <div className="mb-3">
+                          <div className="flex">
+                            <input
+                              type="text"
+                              value={withdrawAmount}
+                              onChange={(e) => setWithdrawAmount(e.target.value)}
+                              placeholder="0.0"
+                              className="bg-zinc-800 border border-zinc-700 rounded-l-lg p-2 w-full text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                            />
+                            <button
+                              type="button"
+                              onClick={setMaxWithdraw}
+                              className="bg-zinc-700 hover:bg-zinc-600 text-white px-3 rounded-r-lg transition-colors"
+                            >
+                              MAX
+                            </button>
+                          </div>
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={
+                            isWithdrawing ||
+                            !withdrawAmount ||
+                            (pools[activePool] && pools[activePool].isLocked) ||
+                            (pools[activePool] &&
+                              Number.parseFloat(withdrawAmount) > Number.parseFloat(pools[activePool].userStaked))
+                          }
+                          className="w-full bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                        >
+                          {isWithdrawing ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                              Withdrawing...
+                            </>
+                          ) : pools[activePool] && pools[activePool].isLocked ? (
+                            <>Locked</>
+                          ) : (
+                            <>Withdraw</>
+                          )}
+                        </button>
+
+                        {pools[activePool] && pools[activePool].isLocked && (
+                          <div className="mt-2 text-xs text-gray-400 text-center">
+                            You can use Emergency Withdraw with a penalty
+                          </div>
+                        )}
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Notifications Section */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-semibold mb-4">Notifications</h2>
+              {notifications.length === 0 ? (
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-4 text-center text-gray-400">
+                  No notifications available.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {notifications.map((notification, index) => (
+                    <div
+                      key={index}
+                      className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-4"
+                    >
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="text-sm text-gray-400">
+                          Pool #{notification.poolId} - {formatAddress(notification.sender)}
+                        </div>
+                        <div className="text-xs text-gray-500">{formatDate(notification.timestamp)}</div>
+                      </div>
+                      <p className="text-white">{notification.message}</p>
+                      {notification.amount !== "0.0" && (
+                        <div className="text-sm text-orange-400">Amount: {notification.amount}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </main>
+  )
+}
+
+export default UserDashboard
