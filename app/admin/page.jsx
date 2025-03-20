@@ -118,18 +118,30 @@ const AdminDashboard = () => {
       setRefreshing(true)
       const contract = await connectContract()
       if (!contract) return
-
+  
       const count = await contract.poolCount()
       const poolsData = []
-
+  
       for (let i = 0; i < count; i++) {
+        // Get all pool info fields from contract
         const pool = await contract.poolInfo(i)
-        const stakedTokenContract = await getTokenContract(pool.stakedToken)
-        const rewardTokenContract = await getTokenContract(pool.rewardToken)
+        const [
+          stakedToken, 
+          rewardToken, 
+          totalStakedBN, 
+          totalRewardsBN, 
+          APY, 
+          lockDays
+        ] = pool
+  
+        // Get token contracts
+        const stakedTokenContract = await getTokenContract(stakedToken)
+        const rewardTokenContract = await getTokenContract(rewardToken)
+  
+        // Get token symbols
         let stakedTokenSymbol = "Unknown"
         let rewardTokenSymbol = "Unknown"
-        let availableRewards = "0"
-
+        
         if (stakedTokenContract) {
           try {
             stakedTokenSymbol = await stakedTokenContract.symbol()
@@ -137,28 +149,30 @@ const AdminDashboard = () => {
             console.error("Error fetching staked token symbol:", error)
           }
         }
+  
         if (rewardTokenContract) {
           try {
             rewardTokenSymbol = await rewardTokenContract.symbol()
-            const rewards = await rewardTokenContract.balanceOf(CONTRACT_ADDRESS)
-            availableRewards = ethers.formatEther(rewards)
           } catch (error) {
-            console.error("Error fetching reward token info:", error)
+            console.error("Error fetching reward token symbol:", error)
           }
         }
-
+  
+        // Push formatted pool data
         poolsData.push({
           id: i,
-          stakedToken: pool.stakedToken,
-          rewardToken: pool.rewardToken,
+          stakedToken,
+          rewardToken,
           stakedTokenSymbol,
           rewardTokenSymbol,
-          totalStaked: ethers.formatEther(pool.totalStaked),
-          APY: pool.APY.toString(),
-          lockDays: pool.lockDays.toString(),
-          availableRewards,
+          totalStaked: ethers.formatEther(totalStakedBN),
+          APY: APY.toString(),
+          lockDays: lockDays.toString(),
+          // Use totalRewards from poolInfo instead of token balance
+          availableRewards: ethers.formatEther(totalRewardsBN),
         })
       }
+      
       setPools(poolsData)
       setRefreshing(false)
     } catch (error) {
@@ -167,7 +181,6 @@ const AdminDashboard = () => {
       setRefreshing(false)
     }
   }
-
   // Add Pool
   const handleAddPool = async () => {
     try {
@@ -194,61 +207,41 @@ const AdminDashboard = () => {
       setLoading(true)
       const contract = await connectContract()
       if (!contract) return
-
+  
       const poolId = Number.parseInt(rewardDeposit.poolId)
       const amount = ethers.parseEther(rewardDeposit.amount)
-
-      // Get the pool to find the reward token
-      const pool = pools.find((p) => p.id === poolId)
-      if (!pool) {
-        setMessage({ type: "error", text: "Pool not found" })
-        return
-      }
-
-      const rewardTokenContract = await getTokenContract(pool.rewardToken)
+  
+      // Get reward token address from pool info
+      const pool = await contract.poolInfo(poolId)
+      const rewardToken = pool[1]
+  
+      // Get ERC20 contract
+      const rewardTokenContract = await getTokenContract(rewardToken)
       if (!rewardTokenContract) {
         setMessage({ type: "error", text: "Could not connect to reward token contract" })
         return
       }
-
-      // Check user's balance of reward token
-      const balance = await rewardTokenContract.balanceOf(account)
-      if (balance < amount) {
-        setMessage({
-          type: "error",
-          text: `Insufficient balance. You have ${ethers.formatEther(balance)} ${pool.rewardTokenSymbol}`,
-        })
-        return
-      }
-
-      // First approve the contract to spend tokens
-      setMessage({ type: "info", text: "Approving tokens... Please confirm the transaction in your wallet" })
+  
+      // Approve contract to spend tokens
+      setMessage({ type: "info", text: "Approving tokens..." })
       const approveTx = await rewardTokenContract.approve(CONTRACT_ADDRESS, amount)
       await approveTx.wait()
-
-      // Check if allowance is sufficient
-      const allowance = await rewardTokenContract.allowance(account, CONTRACT_ADDRESS)
-      if (allowance < amount) {
-        setMessage({ type: "error", text: "Approval failed. Please try again." })
-        return
-      }
-
-      // Now call the contract's depositRewards function
-      setMessage({ type: "info", text: `Depositing rewards to pool ${poolId}... Please confirm the transaction` })
+  
+      // Deposit rewards
+      setMessage({ type: "info", text: "Depositing rewards..." })
       const depositTx = await contract.depositRewards(poolId, amount)
       await depositTx.wait()
-
-      setMessage({ type: "success", text: "Rewards deposited successfully!" })
+  
+      setMessage({ type: "success", text: "Rewards deposited!" })
       setRewardDeposit({ poolId: "0", amount: "" })
-      await fetchPools() // Refresh pools to show updated rewards
+      await fetchPools() // Refresh pool data
     } catch (error) {
-      console.error("Error depositing rewards:", error)
-      setMessage({ type: "error", text: "Failed to deposit rewards: " + error.message })
+      console.error("Deposit error:", error)
+      setMessage({ type: "error", text: error.reason || "Deposit failed" })
     } finally {
       setLoading(false)
     }
   }
-
   // Transfer Ownership
   const handleTransferOwnership = async () => {
     try {
