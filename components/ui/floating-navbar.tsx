@@ -62,15 +62,7 @@ export const FloatingNav = ({
         <Link
           key={`link-${idx}`}
           href={navItem.link || "#"}
-          onClick={(e) => {
-            if (navItem.id) {
-              e.preventDefault()
-              const element = document.getElementById(navItem.id)
-              if (element) {
-                element.scrollIntoView({ behavior: "smooth", block: "start" })
-              }
-            }
-          }}
+          target="_blank"
           className="relative text-neutral-300 items-center flex space-x-1 hover:text-orange-300 transition-colors duration-200 px-2 py-1 text-sm"
         >
           <span className="block sm:hidden">{navItem.icon}</span>
