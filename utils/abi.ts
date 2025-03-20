@@ -503,6 +503,30 @@ const abi = {
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_pid",
+						"type": "uint256"
+					},
+					{
+						"internalType": "address",
+						"name": "_user",
+						"type": "address"
+					}
+				],
+				"name": "pendingReward",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "poolCount",
 				"outputs": [
@@ -764,11 +788,11 @@ const abi = {
 			]
 		},
 		"contracts/CoroYami/StakingDapp.sol": {
-			"keccak256": "0xa87176e171efc6a92ebe7d4a0af4ab6d2ebda7bbcee6e8dcceb78f943c6206de",
+			"keccak256": "0xe6c76e7b698cab1e084529889652169de6556ffd397c32ab98af6f371138f483",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://0f4538c7fb396ab603416a68e254e03c35775e6ccbbc9e09eca88f8597d68d69",
-				"dweb:/ipfs/QmTPszU6JzRvRwx6nkwxFaxdyU1Y62UhUcZUrasnKaL58x"
+				"bzz-raw://daade244ed5ac2cd7220d5bb5550a19bb0fd073304617e84994d04f34808299f",
+				"dweb:/ipfs/QmRLwoDtsqeDrxijzWTQbqNmzRDiH569XH2DAwuMTAd7sW"
 			]
 		}
 	},
