@@ -1,4 +1,3 @@
-
 "use client"
 import { useState, useEffect } from "react"
 import { ethers } from "ethers"
@@ -16,10 +15,10 @@ import {
   Award,
   Bell,
   ChevronRight,
-  ExternalLink,
   Info,
   BarChart3,
   Layers,
+  ArrowDownRightFromCircle,
 } from "lucide-react"
 import { CONTRACT_ADDRESS, CORE_TESTNET_CHAIN_ID, CORE_TESTNET_PARAMS } from "@/utils/constants"
 import abi from "@/utils/abi"
@@ -27,6 +26,9 @@ import ERC20_ABI from "@/utils/erc20abi"
 import { motion, AnimatePresence } from "framer-motion"
 
 const UserDashboard = () => {
+  // First, add a pageLoading state at the top with the other state variables
+  const [pageLoading, setPageLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
   const [account, setAccount] = useState(null)
   const [isConnected, setIsConnected] = useState(false)
   const [provider, setProvider] = useState(null)
@@ -50,6 +52,7 @@ const UserDashboard = () => {
   const [tokenSymbols, setTokenSymbols] = useState({})
   const [showNotifications, setShowNotifications] = useState(false)
 
+  // Update the connectWallet function to handle page loading
   const connectWallet = async () => {
     try {
       setLoading(true)
@@ -64,12 +67,12 @@ const UserDashboard = () => {
         const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, abi, signerInstance)
         setContract(contractInstance)
 
-        // **CHAIN SWITCHING LOGIC HERE**
+        // CHAIN SWITCHING LOGIC HERE
         try {
           await window.ethereum.request({
             method: "wallet_switchEthereumChain",
             params: [{ chainId: CORE_TESTNET_CHAIN_ID }],
-          });
+          })
         } catch (switchError) {
           // This error code indicates that the chain has not been added to MetaMask.
           if (switchError.code === 4902) {
@@ -77,35 +80,41 @@ const UserDashboard = () => {
               await window.ethereum.request({
                 method: "wallet_addEthereumChain",
                 params: [CORE_TESTNET_PARAMS],
-              });
+              })
             } catch (addError) {
-              console.error("Error adding chain:", addError);
-              setError("Failed to add Core Testnet to MetaMask.  Please add it manually.");
-              setLoading(false);
-              return;  // Important:  Exit the function if adding fails.
+              console.error("Error adding chain:", addError)
+              setError("Failed to add Core Testnet to MetaMask. Please add it manually.")
+              setLoading(false)
+              setPageLoading(false)
+              return
             }
           } else {
-            console.error("Error switching chain:", switchError);
-            setError("Failed to switch to Core Testnet. " + (switchError.message || ""));
-            setLoading(false);
-            return; // Exit if switching fails.
+            console.error("Error switching chain:", switchError)
+            setError("Failed to switch to Core Testnet. " + (switchError.message || ""))
+            setLoading(false)
+            setPageLoading(false)
+            return
           }
         }
 
         await fetchData(contractInstance, accounts[0], signerInstance)
       } else {
         setError("Please install MetaMask to use this dApp")
+        setPageLoading(false)
       }
     } catch (err) {
       console.error("Error connecting wallet:", err)
       setError("Failed to connect wallet. " + (err.message || ""))
+      setPageLoading(false)
     } finally {
       setLoading(false)
     }
   }
+  // Update the fetchData function to show loading overlay
   const fetchData = async (contractInstance, userAccount, signerInstance) => {
     try {
       setLoading(true)
+      setRefreshing(true)
       const poolCount = await contractInstance.poolCount()
       const poolsData = []
       const balances = {}
@@ -172,11 +181,13 @@ const UserDashboard = () => {
         })
       }
 
+      // At the end, update the state
       setPools(poolsData)
       setTokenBalances(balances)
       setTokenAllowances(allowances)
       setTokenSymbols(symbols)
 
+      // Set notifications
       const notificationsData = await contractInstance.getNotifications()
       const formattedNotifications = notificationsData.map((notification) => ({
         poolId: Number(notification.poolId),
@@ -185,19 +196,26 @@ const UserDashboard = () => {
         message: notification.message,
         timestamp: Number(notification.timestamp) * 1000,
       }))
-
       setNotifications(formattedNotifications)
+
+      // Hide loading screens
+      setPageLoading(false)
     } catch (err) {
       console.error("Error fetching data:", err)
       setError("Failed to fetch data from contract")
+      setPageLoading(false)
     } finally {
       setLoading(false)
+      setRefreshing(false)
     }
   }
 
+  // Update the refreshData function to show loading overlay
   const refreshData = async () => {
     if (contract && account && signer) {
+      setRefreshing(true)
       await fetchData(contract, account, signer)
+      setRefreshing(false)
     }
   }
 
@@ -412,6 +430,7 @@ const UserDashboard = () => {
     return new Date(timestamp).toLocaleString()
   }
 
+  // Update the useEffect to handle page loading
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
       const provider = new ethers.BrowserProvider(window.ethereum)
@@ -421,9 +440,15 @@ const UserDashboard = () => {
         .then((accounts) => {
           if (accounts.length > 0) {
             connectWallet()
+          } else {
+            // If no accounts, still hide the loading screen after a delay
+            setTimeout(() => setPageLoading(false), 1500)
           }
         })
-        .catch((err) => console.error("Error checking accounts:", err))
+        .catch((err) => {
+          console.error("Error checking accounts:", err)
+          setTimeout(() => setPageLoading(false), 1500)
+        })
 
       window.ethereum.on("accountsChanged", () => {
         window.location.reload()
@@ -432,6 +457,9 @@ const UserDashboard = () => {
       window.ethereum.on("chainChanged", () => {
         window.location.reload()
       })
+    } else {
+      // If no ethereum provider, hide loading screen after a delay
+      setTimeout(() => setPageLoading(false), 1500)
     }
 
     return () => {
@@ -461,8 +489,67 @@ const UserDashboard = () => {
     }
   }, [error])
 
+  // Add these new components right after the formatDate function
+  // Loading screen component with CORO TASHI logo
+  const LoadingScreen = ({ message = "Loading dashboard..." }) => (
+    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
+      <div className="relative w-40 h-40 mb-6">
+        <div className="absolute inset-0 rounded-full border-4 border-orange-500/30"></div>
+        <motion.div
+          className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img src="/image.png" alt="CORO TASHI Logo" className="w-28 h-28 object-contain rounded-full" />
+        </div>
+      </div>
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="text-3xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
+      >
+        CORO <span className="text-orange-600">TASHI</span>
+      </motion.h1>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="text-zinc-400 mt-2"
+      >
+        {message}
+      </motion.p>
+    </div>
+  )
+
+  // Add a data loading overlay component
+  const DataLoadingOverlay = () => (
+    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-20 flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <div className="w-20 h-20 relative mb-4">
+          <div className="absolute inset-0 rounded-full border-4 border-orange-500/20"></div>
+          <motion.div
+            className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img src="/image.png" alt="CORO TASHI Logo" className="w-14 h-14 object-contain rounded-full" />
+          </div>
+        </div>
+        <p className="text-orange-400 font-medium">Loading data...</p>
+      </div>
+    </div>
+  )
+
+  // In the main return, right after the opening <main> tag, add the loading screen
+  // Add the LoadingScreen component to the JSX
   return (
     <main className="min-h-screen bg-black text-white relative">
+      {/* Loading Screen */}
+      <AnimatePresence>{pageLoading && <LoadingScreen />}</AnimatePresence>
+
       {/* Background elements */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[180px]"></div>
@@ -495,21 +582,19 @@ const UserDashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Show loading overlay when refreshing data */}
+        {refreshing && <DataLoadingOverlay />}
+
         <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-zinc-800/50 pb-6">
-          <div className="flex items-center mb-4 md:mb-0 rounded-full">
-            {/* Logo */}
-            <div className="w-28 h-28 mr-3 relative flex items-center justify-center rounded-full">
-              <img
-                src="/image.png"
-                alt="CORO TASHI Logo"
-                className="w-18 h-full object-contain rounded-full"
-              />
+          <div className="flex items-center mb-4 md:mb-0">
+            <div className="w-14 h-14 mr-4 relative flex items-center justify-center rounded-full bg-zinc-900/80 border border-orange-500/30 shadow-lg shadow-orange-500/10">
+              <img src="/image.png" alt="CORO TASHI Logo" className="w-10 h-10 object-contain rounded-full" />
               <div className="absolute -inset-1 bg-orange-500/20 rounded-full blur-xl -z-10"></div>
             </div>
 
             <div>
-              <h1 className="text-3xl md:text-4xl font-bold">
-                CORO <span className="text-orange-500">TASHI</span>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
+                CORO <span className="text-white">TASHI</span>
               </h1>
               <p className="text-zinc-400 text-sm">Staking Dashboard</p>
             </div>
@@ -716,8 +801,9 @@ const UserDashboard = () => {
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ duration: 0.3 }}
-                          className={`p-4 hover:bg-zinc-800/30 transition-colors cursor-pointer ${activePool === pool.id ? "bg-zinc-800/50 border-l-2 border-orange-500" : ""
-                            }`}
+                          className={`p-3 hover:bg-zinc-800/30 transition-colors cursor-pointer ${
+                            activePool === pool.id ? "bg-zinc-800/50 border-l-2 border-orange-500" : ""
+                          }`}
                           onClick={() => setActivePool(pool.id)}
                         >
                           <div className="flex justify-between items-center mb-2">
@@ -725,91 +811,61 @@ const UserDashboard = () => {
                               <div className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mr-2 text-xs text-orange-400">
                                 {pool.id}
                               </div>
-                              Pool #{pool.id}
-                              <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
+                              <span className="mr-2">Pool #{pool.id}</span>
+                              <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
                                 {pool.APY}% APY
                               </span>
                             </h3>
-                            <div className="flex items-center text-sm text-zinc-400">
+                            <div className="flex items-center text-xs text-zinc-400">
                               <Lock className="w-3 h-3 mr-1" />
                               {pool.lockDays} days lock
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
                             <div>
                               <div className="text-zinc-400 flex items-center mb-1">
-                                <span className="w-2 h-2 bg-orange-500/50 rounded-full mr-1"></span>
-                                Staked Token:
-                              </div>
-                              <div className="flex items-center">
-                                <span className="text-white font-medium">
-                                  {tokenSymbols[pool.stakedToken] || "???"}
-                                </span>
-                                <a
-                                  href={`https://scan.test2.btcs.network/address/${pool.stakedToken}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="ml-1 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <ExternalLink className="w-3 h-3 inline" />
-                                </a>
+                                <span className="w-1.5 h-1.5 bg-orange-500/50 rounded-full mr-1"></span>
+                                Staked: {tokenSymbols[pool.stakedToken] || "???"}
                               </div>
                             </div>
                             <div>
                               <div className="text-zinc-400 flex items-center mb-1">
-                                <span className="w-2 h-2 bg-orange-500/50 rounded-full mr-1"></span>
-                                Reward Token:
-                              </div>
-                              <div className="flex items-center">
-                                <span className="text-white font-medium">
-                                  {tokenSymbols[pool.rewardToken] || "???"}
-                                </span>
-                                <a
-                                  href={`https://etherscan.io/address/${pool.rewardToken}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="ml-1 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <ExternalLink className="w-3 h-3 inline" />
-                                </a>
+                                <span className="w-1.5 h-1.5 bg-orange-500/50 rounded-full mr-1"></span>
+                                Reward: {tokenSymbols[pool.rewardToken] || "???"}
                               </div>
                             </div>
                           </div>
 
-                          <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30">
+                          <div className="bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/30">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm text-zinc-400">Your Position</span>
+                              <span className="text-xs text-zinc-400">Your Position</span>
                               {pool.isLocked ? (
                                 <span className="text-xs flex items-center text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full">
-                                  <Clock className="w-3 h-3 mr-1" />
+                                  <Clock className="w-2.5 h-2.5 mr-1" />
                                   {pool.lockTimeRemaining}
                                 </span>
                               ) : (
                                 <span className="text-xs flex items-center text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
-                                  <Unlock className="w-3 h-3 mr-1" />
+                                  <Unlock className="w-2.5 h-2.5 mr-1" />
                                   Unlocked
                                 </span>
                               )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4 mb-3">
+                            <div className="grid grid-cols-2 gap-4 mb-3 text-sm">
                               <div>
-                                <div className="text-xs text-zinc-400 mb-1">Staked</div>
+                                <div className="text-zinc-400 mb-1 text-xs">Staked</div>
                                 <div className="font-medium flex items-center">
-                                  <BarChart3 className="w-4 h-4 text-orange-500 mr-1" />
-                                  {Number.parseFloat(pool.userStaked).toFixed(4)}{" "}
-                                  <span className="text-zinc-400 ml-1">{tokenSymbols[pool.stakedToken]}</span>
+                                  <BarChart3 className="w-3 h-3 text-orange-500 mr-1" />
+                                  {Number.parseFloat(pool.userStaked).toFixed(4)}
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs text-zinc-400 mb-1">Pending Rewards</div>
+                                <div className="text-zinc-400 mb-1 text-xs">Pending Rewards</div>
                                 <div className="font-medium flex items-center text-orange-400">
-                                  <Award className="w-4 h-4 mr-1" />
-                                  {Number.parseFloat(pool.pendingReward).toFixed(4)}{" "}
-                                  <span className="text-zinc-400 ml-1">{tokenSymbols[pool.rewardToken]}</span>
+                                  <Award className="w-3 h-3 mr-1" />
+                                  {Number.parseFloat(pool.pendingReward).toFixed(4)}
                                 </div>
                               </div>
                             </div>
@@ -830,7 +886,7 @@ const UserDashboard = () => {
                                 ) : (
                                   <Award className="w-3 h-3 mr-1" />
                                 )}
-                                Claim Rewards
+                                Claim
                               </motion.button>
 
                               {Number.parseFloat(pool.userStaked) > 0 && (
@@ -891,8 +947,8 @@ const UserDashboard = () => {
                                   {ethers.formatEther(tokenBalances[pools[activePool].stakedToken]) === "0.0"
                                     ? "0"
                                     : Number(ethers.formatEther(tokenBalances[pools[activePool].stakedToken])).toFixed(
-                                      4,
-                                    )}{" "}
+                                        4,
+                                      )}{" "}
                                   <span className="text-zinc-400">{tokenSymbols[pools[activePool].stakedToken]}</span>
                                 </>
                               ) : (
@@ -1056,69 +1112,97 @@ const UserDashboard = () => {
               </div>
             </div>
 
-            {/* Notifications Section */}
+            {/* Transactions Section */}
             <div className="mt-8">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-semibold flex items-center">
-                  <Bell className="w-5 h-5 text-orange-500 mr-2" />
-                  Notifications
+                  <ArrowDownRightFromCircle className="w-5 h-5 text-orange-500 mr-2" />
+                 
+                  Transactions
                 </h2>
                 {notifications.length > 0 && (
-                  <span className="text-sm text-zinc-400">{notifications.length} notifications</span>
+                  <span className="text-sm text-zinc-400">{notifications.length} transactions</span>
                 )}
               </div>
 
               {notifications.length === 0 ? (
                 <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-8 text-center text-zinc-400">
                   <Bell className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
-                  <p className="mb-2">No notifications available</p>
+                  <p className="mb-2">No transaction history available</p>
                   <p className="text-sm text-zinc-500">Your activity will appear here</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {notifications.slice(0, 6).map((notification, index) => (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
-                      key={index}
-                      className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 hover:border-orange-500/30 rounded-xl p-4 transition-colors"
-                    >
-                      <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center">
-                          <div className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mr-2 text-xs text-orange-400">
-                            {notification.poolId}
-                          </div>
-                          <span className="text-sm text-zinc-300">Pool #{notification.poolId}</span>
-                        </div>
-                        <div className="text-xs text-zinc-500">{formatDate(notification.timestamp)}</div>
-                      </div>
-                      <p className="text-white text-sm mb-1">{notification.message}</p>
-                      {notification.amount !== "0.0" && (
-                        <div className="text-sm text-orange-400 flex items-center">
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          Amount: {notification.amount}
-                        </div>
-                      )}
-                    </motion.div>
-                  ))}
-                </div>
-              )}
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden">
+                  <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
+                    <div className="flex items-center">
+                      <TrendingUp className="w-5 h-5 text-orange-500 mr-2" />
+                      <h3 className="text-lg font-semibold">Recent Activity</h3>
+                    </div>
+                    <div className="text-sm text-zinc-400">
+                      Showing {Math.min(10, notifications.length)} of {notifications.length}
+                    </div>
+                  </div>
 
-              {notifications.length > 6 && (
-                <div className="mt-4 text-center">
-                  <button className="text-orange-400 hover:text-orange-300 transition-colors text-sm flex items-center mx-auto">
-                    View all notifications
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </button>
+                  <div className="divide-y divide-zinc-800/50">
+                    {notifications.slice(0, 10).map((notification, index) => (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        key={index}
+                        className="p-4 hover:bg-zinc-800/30 transition-colors"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center flex-shrink-0 border border-orange-500/20">
+                            <div className="text-sm font-medium text-orange-400">#{notification.poolId}</div>
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start mb-1">
+                              <h4 className="text-white font-medium truncate pr-2">{notification.message}</h4>
+                              <span className="text-xs text-zinc-500 whitespace-nowrap">
+                                {new Date(notification.timestamp).toLocaleString()}
+                              </span>
+                            </div>
+
+                            {notification.amount !== "0.0" && (
+                              <div className="flex items-center text-sm text-orange-400 bg-orange-500/10 px-2 py-1 rounded-md w-fit">
+                                <TrendingUp className="w-3 h-3 mr-1" />
+                                <span>{notification.amount}</span>
+                              </div>
+                            )}
+
+                            <div className="mt-2 flex items-center text-xs text-zinc-500">
+                              <span className="flex items-center">
+                                <Clock className="w-3 h-3 mr-1" />
+                                {new Date(notification.timestamp).toLocaleDateString()} at{" "}
+                                {new Date(notification.timestamp).toLocaleTimeString()}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {notifications.length > 10 && (
+                    <div className="p-3 border-t border-zinc-800 text-center">
+                      <button className="text-orange-400 hover:text-orange-300 transition-colors text-sm flex items-center mx-auto justify-center">
+                        View all transactions
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </>
         )}
       </div>
+      {loading && <DataLoadingOverlay />}
     </main>
   )
 }
 
 export default UserDashboard
+
