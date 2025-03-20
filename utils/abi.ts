@@ -63,6 +63,12 @@ const abi = {
 						"internalType": "uint256",
 						"name": "reward",
 						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "fee",
+						"type": "uint256"
 					}
 				],
 				"name": "Claimed",
@@ -91,6 +97,37 @@ const abi = {
 					}
 				],
 				"name": "Deposited",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"indexed": true,
+						"internalType": "uint256",
+						"name": "pid",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "penalty",
+						"type": "uint256"
+					}
+				],
+				"name": "EmergencyWithdrawn",
 				"type": "event"
 			},
 			{
@@ -182,6 +219,12 @@ const abi = {
 						"internalType": "uint256",
 						"name": "amount",
 						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "fee",
+						"type": "uint256"
 					}
 				],
 				"name": "Withdrawn",
@@ -202,7 +245,46 @@ const abi = {
 			},
 			{
 				"inputs": [],
-				"name": "TEST_LOCK_PERIOD",
+				"name": "EMERGENCY_PENALTY",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "FEE_PERCENT",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "MAX_MULTIPLIER",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "TEST_DAY",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -265,14 +347,9 @@ const abi = {
 						"internalType": "uint256",
 						"name": "_amount",
 						"type": "uint256"
-					},
-					{
-						"internalType": "string",
-						"name": "_message",
-						"type": "string"
 					}
 				],
-				"name": "createNotification",
+				"name": "deposit",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -283,14 +360,9 @@ const abi = {
 						"internalType": "uint256",
 						"name": "_pid",
 						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
 					}
 				],
-				"name": "deposit",
+				"name": "emergencyWithdraw",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -333,24 +405,6 @@ const abi = {
 					}
 				],
 				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_pid",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_newAPY",
-						"type": "uint256"
-					}
-				],
-				"name": "modifyPool",
-				"outputs": [],
-				"stateMutability": "nonpayable",
 				"type": "function"
 			},
 			{
@@ -484,29 +538,6 @@ const abi = {
 			{
 				"inputs": [],
 				"name": "renounceOwnership",
-				"outputs": [],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_pid",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_amount",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "_to",
-						"type": "address"
-					}
-				],
-				"name": "swap",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -709,15 +740,14 @@ const abi = {
 			]
 		},
 		"contracts/CoroYami/StakingDapp.sol": {
-			"keccak256": "0xda8e5efed88d91e55f36086294f1cd5b5a7f06299fbf822955c8b70c61eb4d31",
+			"keccak256": "0x1b1b6f746433da88d0b593fa49ef40f4f37cf4592070109a357af7946f6cae52",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://1deb06644c32a33910da6494149fea97663b1150d870320acbc9dedbda5b4ec2",
-				"dweb:/ipfs/QmXXdNgQDiwqana64qoZnbkxh3NCUwG1SrTMXj9dxQNWAL"
+				"bzz-raw://728721ef0842203d08bff23f47550bedb24c0a86207631db5f1dc5b2675740a1",
+				"dweb:/ipfs/QmTPqPRsFVNh3pVktRLpQQPUawLDqjdjSTdVdt5ueMjXzd"
 			]
 		}
 	},
 	"version": 1
 }
-
 export default abi.output.abi;
