@@ -204,6 +204,31 @@ const abi = {
 				"inputs": [
 					{
 						"indexed": true,
+						"internalType": "uint256",
+						"name": "pid",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					},
+					{
+						"indexed": false,
+						"internalType": "address",
+						"name": "depositor",
+						"type": "address"
+					}
+				],
+				"name": "RewardDeposited",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
 						"internalType": "address",
 						"name": "user",
 						"type": "address"
@@ -360,6 +385,24 @@ const abi = {
 						"internalType": "uint256",
 						"name": "_pid",
 						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_amount",
+						"type": "uint256"
+					}
+				],
+				"name": "depositRewards",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "_pid",
+						"type": "uint256"
 					}
 				],
 				"name": "emergencyWithdraw",
@@ -399,7 +442,7 @@ const abi = {
 								"type": "uint256"
 							}
 						],
-						"internalType": "struct CoroYami.Notification[]",
+						"internalType": "struct CoroTashi.Notification[]",
 						"name": "",
 						"type": "tuple[]"
 					}
@@ -460,30 +503,6 @@ const abi = {
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "_pid",
-						"type": "uint256"
-					},
-					{
-						"internalType": "address",
-						"name": "_user",
-						"type": "address"
-					}
-				],
-				"name": "pendingReward",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [],
 				"name": "poolCount",
 				"outputs": [
@@ -519,6 +538,11 @@ const abi = {
 					{
 						"internalType": "uint256",
 						"name": "totalStaked",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "totalRewards",
 						"type": "uint256"
 					},
 					{
@@ -653,7 +677,7 @@ const abi = {
 	},
 	"settings": {
 		"compilationTarget": {
-			"contracts/CoroYami/StakingDapp.sol": "CoroYami"
+			"contracts/CoroYami/StakingDapp.sol": "CoroTashi"
 		},
 		"evmVersion": "shanghai",
 		"libraries": {},
@@ -740,11 +764,11 @@ const abi = {
 			]
 		},
 		"contracts/CoroYami/StakingDapp.sol": {
-			"keccak256": "0x1b1b6f746433da88d0b593fa49ef40f4f37cf4592070109a357af7946f6cae52",
+			"keccak256": "0xa87176e171efc6a92ebe7d4a0af4ab6d2ebda7bbcee6e8dcceb78f943c6206de",
 			"license": "MIT",
 			"urls": [
-				"bzz-raw://728721ef0842203d08bff23f47550bedb24c0a86207631db5f1dc5b2675740a1",
-				"dweb:/ipfs/QmTPqPRsFVNh3pVktRLpQQPUawLDqjdjSTdVdt5ueMjXzd"
+				"bzz-raw://0f4538c7fb396ab603416a68e254e03c35775e6ccbbc9e09eca88f8597d68d69",
+				"dweb:/ipfs/QmTPszU6JzRvRwx6nkwxFaxdyU1Y62UhUcZUrasnKaL58x"
 			]
 		}
 	},
