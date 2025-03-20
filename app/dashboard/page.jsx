@@ -110,6 +110,7 @@ const UserDashboard = () => {
       setLoading(false)
     }
   }
+
   // Update the fetchData function to show loading overlay
   const fetchData = async (contractInstance, userAccount, signerInstance) => {
     try {
@@ -123,7 +124,6 @@ const UserDashboard = () => {
 
       for (let i = 0; i < poolCount; i++) {
         const pool = await contractInstance.poolInfo(i)
-        console.log(pool);
         const userInfo = await contractInstance.userInfo(i, userAccount)
         const pendingReward = await contractInstance.pendingReward(i, userAccount)
 
@@ -181,11 +181,7 @@ const UserDashboard = () => {
           isLocked,
           lockTimeRemaining,
         })
-
-       console.log("LIQUIDTY", ethers.formatEther(pool[3]));
       }
-
-      
 
       // At the end, update the state
       setPools(poolsData)
@@ -436,6 +432,59 @@ const UserDashboard = () => {
     return new Date(timestamp).toLocaleString()
   }
 
+  // Loading screen component with CORO TASHI logo
+  const LoadingScreen = ({ message = "Loading dashboard..." }) => (
+    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
+      <div className="relative w-40 h-40 mb-6">
+        <div className="absolute inset-0 rounded-full border-4 border-orange-500/30"></div>
+        <motion.div
+          className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img src="/image.png" alt="CORO TASHI Logo" className="w-28 h-28 object-contain rounded-full" />
+        </div>
+      </div>
+      <motion.h1
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+        className="text-3xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
+      >
+        CORO <span className="text-orange-600">TASHI</span>
+      </motion.h1>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+        className="text-zinc-400 mt-2"
+      >
+        {message}
+      </motion.p>
+    </div>
+  )
+
+  // Add a data loading overlay component
+  const DataLoadingOverlay = () => (
+    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-20 flex items-center justify-center">
+      <div className="flex flex-col items-center">
+        <div className="w-20 h-20 relative mb-4">
+          <div className="absolute inset-0 rounded-full border-4 border-orange-500/20"></div>
+          <motion.div
+            className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent"
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
+          />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img src="/image.png" alt="CORO TASHI Logo" className="w-14 h-14 object-contain rounded-full" />
+          </div>
+        </div>
+        <p className="text-orange-400 font-medium">Loading data...</p>
+      </div>
+    </div>
+  )
+
   // Update the useEffect to handle page loading
   useEffect(() => {
     if (typeof window.ethereum !== "undefined") {
@@ -495,62 +544,6 @@ const UserDashboard = () => {
     }
   }, [error])
 
-  // Add these new components right after the formatDate function
-  // Loading screen component with CORO TASHI logo
-  const LoadingScreen = ({ message = "Loading dashboard..." }) => (
-    <div className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
-      <div className="relative w-40 h-40 mb-6">
-        <div className="absolute inset-0 rounded-full border-4 border-orange-500/30"></div>
-        <motion.div
-          className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <img src="/image.png" alt="CORO TASHI Logo" className="w-28 h-28 object-contain rounded-full" />
-        </div>
-      </div>
-      <motion.h1
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5 }}
-        className="text-3xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
-      >
-        CORO <span className="text-orange-600">TASHI</span>
-      </motion.h1>
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.5 }}
-        className="text-zinc-400 mt-2"
-      >
-        {message}
-      </motion.p>
-    </div>
-  )
-
-  // Add a data loading overlay component
-  const DataLoadingOverlay = () => (
-    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm z-20 flex items-center justify-center">
-      <div className="flex flex-col items-center">
-        <div className="w-20 h-20 relative mb-4">
-          <div className="absolute inset-0 rounded-full border-4 border-orange-500/20"></div>
-          <motion.div
-            className="absolute inset-0 rounded-full border-4 border-orange-500 border-t-transparent"
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <img src="/image.png" alt="CORO TASHI Logo" className="w-14 h-14 object-contain rounded-full" />
-          </div>
-        </div>
-        <p className="text-orange-400 font-medium">Loading data...</p>
-      </div>
-    </div>
-  )
-
-  // In the main return, right after the opening <main> tag, add the loading screen
-  // Add the LoadingScreen component to the JSX
   return (
     <main className="min-h-screen bg-black text-white relative">
       {/* Loading Screen */}
@@ -828,7 +821,7 @@ const UserDashboard = () => {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-2 gap-2 text-xs mb-2">
+                          <div className="grid grid-cols-3 gap-2 text-xs mb-2">
                             <div>
                               <div className="text-zinc-400 flex items-center mb-1">
                                 <span className="w-1.5 h-1.5 bg-orange-500/50 rounded-full mr-1"></span>
@@ -839,6 +832,12 @@ const UserDashboard = () => {
                               <div className="text-zinc-400 flex items-center mb-1">
                                 <span className="w-1.5 h-1.5 bg-orange-500/50 rounded-full mr-1"></span>
                                 Reward: {tokenSymbols[pool.rewardToken] || "???"}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-zinc-400 flex items-center mb-1">
+                                <span className="w-1.5 h-1.5 bg-green-500/50 rounded-full mr-1"></span>
+                                Liquidity: {Number(pool.liquidity).toFixed(2)}
                               </div>
                             </div>
                           </div>
@@ -1123,7 +1122,6 @@ const UserDashboard = () => {
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-semibold flex items-center">
                   <ArrowDownRightFromCircle className="w-5 h-5 text-orange-500 mr-2" />
-                 
                   Transactions
                 </h2>
                 {notifications.length > 0 && (
@@ -1211,4 +1209,3 @@ const UserDashboard = () => {
 }
 
 export default UserDashboard
-
