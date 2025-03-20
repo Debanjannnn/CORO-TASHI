@@ -6,7 +6,7 @@ declare global {
     }
 }
 
-export const CONTRACT_ADDRESS: string = "0xC0262D9752cd958bc0Ae8402E2a4fB19aEE6CCF6";
+export const CONTRACT_ADDRESS: string = "0xbf0847d5FAd6040aA059E4D819203004f58E6FBb";
 
 
 export enum TabType {
