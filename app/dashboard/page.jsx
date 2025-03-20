@@ -1,3 +1,4 @@
+
 "use client"
 import { useState, useEffect } from "react"
 import { ethers } from "ethers"
@@ -13,10 +14,17 @@ import {
   Plus,
   Minus,
   Award,
+  Bell,
+  ChevronRight,
+  ExternalLink,
+  Info,
+  BarChart3,
+  Layers,
 } from "lucide-react"
 import { CONTRACT_ADDRESS } from "@/utils/constants"
 import abi from "@/utils/abi"
 import ERC20_ABI from "@/utils/erc20abi"
+import { motion, AnimatePresence } from "framer-motion"
 
 const UserDashboard = () => {
   const [account, setAccount] = useState(null)
@@ -40,6 +48,7 @@ const UserDashboard = () => {
   const [tokenBalances, setTokenBalances] = useState({})
   const [tokenAllowances, setTokenAllowances] = useState({})
   const [tokenSymbols, setTokenSymbols] = useState({})
+  const [showNotifications, setShowNotifications] = useState(false)
 
   const connectWallet = async () => {
     try {
@@ -425,70 +434,211 @@ const UserDashboard = () => {
   }, [error])
 
   return (
-    <main className="min-h-screen bg-black text-white">
-      <div className="container mx-auto px-4 py-8 relative z-10">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-0">
-            CORO <span className="text-orange-500">TASHI</span> Dashboard
-          </h1>
+    <main className="min-h-screen bg-black text-white relative">
+      {/* Background elements */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-1/4 right-1/4 w-[500px] h-[500px] bg-orange-500/5 rounded-full blur-[180px]"></div>
+        <div className="absolute bottom-1/3 left-1/3 w-[400px] h-[400px] bg-orange-500/5 rounded-full blur-[160px]"></div>
+        <div className="absolute inset-0 bg-[url('/placeholder.svg?height=2&width=2')] bg-[length:50px_50px] opacity-[0.025]"></div>
 
-          {!isConnected ? (
-            <button
-              onClick={connectWallet}
-              disabled={loading}
-              className="bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white font-medium py-2 px-6 rounded-full flex items-center transition-all duration-300 disabled:opacity-50"
-            >
-              {loading ? (
-                <>
-                  <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
-                  Connecting...
-                </>
-              ) : (
-                <>
-                  <Wallet className="w-5 h-5 mr-2" />
-                  Connect Wallet
-                </>
-              )}
-            </button>
-          ) : (
-            <div className="flex items-center bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-full py-2 px-4">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-              <span className="text-sm font-medium">{formatAddress(account)}</span>
-            </div>
-          )}
+        {/* Circuit-like pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <svg width="100%" height="100%" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            {/* Horizontal and vertical lines */}
+            <line x1="0" y1="20" x2="100" y2="20" stroke="#f97316" strokeWidth="0.2" strokeDasharray="1,3" />
+            <line x1="0" y1="80" x2="100" y2="80" stroke="#f97316" strokeWidth="0.2" strokeDasharray="1,3" />
+            <line x1="20" y1="0" x2="20" y2="100" stroke="#f97316" strokeWidth="0.2" strokeDasharray="1,3" />
+            <line x1="80" y1="0" x2="80" y2="100" stroke="#f97316" strokeWidth="0.2" strokeDasharray="1,3" />
+
+            {/* Diagonal lines */}
+            <line x1="0" y1="0" x2="100" y2="100" stroke="#f97316" strokeWidth="0.2" strokeDasharray="1,5" />
+            <line x1="100" y1="0" x2="0" y2="100" stroke="#f97316" strokeWidth="0.2" strokeDasharray="1,5" />
+
+            {/* Circles */}
+            <circle cx="50" cy="50" r="30" stroke="#f97316" strokeWidth="0.3" fill="none" opacity="0.3" />
+            <circle cx="50" cy="50" r="20" stroke="#f97316" strokeWidth="0.3" fill="none" opacity="0.5" />
+            <circle cx="50" cy="50" r="10" stroke="#f97316" strokeWidth="0.3" fill="none" opacity="0.7" />
+          </svg>
         </div>
 
-        {error && (
-          <div className="mb-6 bg-red-900/30 border border-red-500/50 rounded-lg p-4 flex items-start">
-            <AlertTriangle className="w-5 h-5 text-red-500 mr-2 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-medium text-red-400">Error</h3>
-              <p className="text-red-300">{error}</p>
-            </div>
-          </div>
-        )}
+        {/* Vignette effect */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black opacity-70"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-transparent to-black opacity-70"></div>
+      </div>
 
-        {success && (
-          <div className="mb-6 bg-green-900/30 border border-green-500/50 rounded-lg p-4 flex items-start">
-            <CheckCircle className="w-5 h-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-zinc-800/50 pb-6">
+          <div className="flex items-center mb-4 md:mb-0 rounded-full">
+            {/* Logo */}
+            <div className="w-28 h-28 mr-3 relative flex items-center justify-center rounded-full">
+              <img
+                src="/image.png"
+                alt="CORO TASHI Logo"
+                className="w-18 h-full object-contain rounded-full"
+              />
+              <div className="absolute -inset-1 bg-orange-500/20 rounded-full blur-xl -z-10"></div>
+            </div>
+
             <div>
-              <h3 className="font-medium text-green-400">Success</h3>
-              <p className="text-green-300">{success}</p>
+              <h1 className="text-3xl md:text-4xl font-bold">
+                CORO <span className="text-orange-500">TASHI</span>
+              </h1>
+              <p className="text-zinc-400 text-sm">Staking Dashboard</p>
             </div>
           </div>
-        )}
+
+          <div className="flex items-center gap-3">
+            {notifications.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  className="p-2 rounded-full bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 transition-colors relative"
+                >
+                  <Bell className="w-5 h-5 text-zinc-400" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full text-[10px] flex items-center justify-center">
+                    {notifications.length}
+                  </span>
+                </button>
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-xl z-50 max-h-96 overflow-y-auto">
+                    <div className="p-3 border-b border-zinc-800 flex justify-between items-center">
+                      <h3 className="font-medium">Notifications</h3>
+                      <button
+                        onClick={() => setShowNotifications(false)}
+                        className="text-zinc-400 hover:text-white transition-colors"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                    <div className="p-2">
+                      {notifications.slice(0, 5).map((notification, index) => (
+                        <div key={index} className="p-2 hover:bg-zinc-800/50 rounded-lg transition-colors mb-1 text-sm">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="text-xs text-orange-400">Pool #{notification.poolId}</span>
+                            <span className="text-xs text-zinc-500">
+                              {new Date(notification.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-zinc-300">{notification.message}</p>
+                        </div>
+                      ))}
+                      {notifications.length > 5 && (
+                        <button
+                          onClick={() => setShowNotifications(false)}
+                          className="w-full text-center text-xs text-orange-400 hover:text-orange-300 py-2 transition-colors"
+                        >
+                          View all notifications
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {!isConnected ? (
+              <motion.button
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={connectWallet}
+                disabled={loading}
+                className="bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white font-medium py-2 px-6 rounded-full flex items-center transition-all duration-300 disabled:opacity-50 shadow-lg shadow-orange-500/20"
+              >
+                {loading ? (
+                  <>
+                    <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  <>
+                    <Wallet className="w-5 h-5 mr-2" />
+                    Connect Wallet
+                  </>
+                )}
+              </motion.button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <div className="hidden md:flex items-center bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-full py-2 px-4">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <span className="text-sm font-medium">{formatAddress(account)}</span>
+                </div>
+                <button
+                  onClick={refreshData}
+                  className="p-2 rounded-full bg-zinc-900/80 border border-zinc-800 hover:bg-zinc-800 transition-colors"
+                >
+                  <RefreshCw className={`w-5 h-5 text-zinc-400 ${loading ? "animate-spin text-orange-400" : ""}`} />
+                </button>
+              </div>
+            )}
+          </div>
+        </header>
+
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 bg-red-900/30 border border-red-500/50 rounded-xl p-4 flex items-start"
+            >
+              <AlertTriangle className="w-5 h-5 text-red-500 mr-3 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-red-400">Error</h3>
+                <p className="text-red-300 text-sm">{error}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-6 bg-green-900/30 border border-green-500/50 rounded-xl p-4 flex items-start"
+            >
+              <CheckCircle className="w-5 h-5 text-green-500 mr-3 flex-shrink-0 mt-0.5" />
+              <div>
+                <h3 className="font-medium text-green-400">Success</h3>
+                <p className="text-green-300 text-sm">{success}</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {!isConnected ? (
-          <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-8 text-center">
-            <Wallet className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold mb-2">Connect Your Wallet</h2>
-            <p className="text-gray-400 mb-6 max-w-md mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-8 text-center"
+          >
+            <div className="w-24 h-24 mx-auto mb-6 relative">
+              <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+                {/* Outer hexagon */}
+                <path d="M50 5 L95 30 L95 70 L50 95 L5 70 L5 30 Z" fill="none" stroke="#f97316" strokeWidth="4" />
+                {/* Inner hexagon */}
+                <path d="M50 20 L80 35 L80 65 L50 80 L20 65 L20 35 Z" fill="none" stroke="#f97316" strokeWidth="3" />
+                {/* Cube - front face */}
+                <path d="M50 40 L70 50 L70 70 L50 80 Z" fill="#f97316" opacity="0.7" />
+                {/* Cube - top edge */}
+                <path d="M50 40 L30 50 L50 60 L70 50 Z" fill="none" stroke="#f97316" strokeWidth="3" />
+                {/* Cube - side edge */}
+                <path d="M50 60 L50 80 L30 70 L30 50 Z" fill="none" stroke="#f97316" strokeWidth="3" />
+              </svg>
+              <div className="absolute -inset-4 bg-orange-500/20 rounded-full blur-xl -z-10"></div>
+            </div>
+            <h2 className="text-3xl font-bold mb-3">Welcome to CORO TASHI</h2>
+            <p className="text-zinc-400 mb-8 max-w-md mx-auto">
               Connect your wallet to view your staking positions, deposit tokens, and claim rewards.
             </p>
-            <button
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.98 }}
               onClick={connectWallet}
               disabled={loading}
-              className="bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white font-medium py-3 px-8 rounded-full flex items-center mx-auto transition-all duration-300 disabled:opacity-50"
+              className="bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white font-bold py-3 px-8 rounded-full flex items-center mx-auto transition-all duration-300 disabled:opacity-50 shadow-lg shadow-orange-500/20"
             >
               {loading ? (
                 <>
@@ -501,111 +651,151 @@ const UserDashboard = () => {
                   Connect Wallet
                 </>
               )}
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         ) : (
           <>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2">
-                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden">
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden shadow-xl">
                   <div className="p-4 border-b border-zinc-800 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold">Staking Pools</h2>
-                    <button
-                      onClick={refreshData}
-                      className="text-gray-400 hover:text-white p-2 rounded-full transition-colors"
-                    >
-                      <RefreshCw className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center">
+                      <Layers className="w-5 h-5 text-orange-500 mr-2" />
+                      <h2 className="text-xl font-semibold">Staking Pools</h2>
+                    </div>
+                    <div className="flex items-center text-sm text-zinc-400">
+                      <span className="mr-2">Total Pools: {pools.length}</span>
+                      <button
+                        onClick={refreshData}
+                        className="text-zinc-400 hover:text-orange-400 p-1 rounded-full transition-colors"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                      </button>
+                    </div>
                   </div>
 
                   {pools.length === 0 ? (
-                    <div className="p-8 text-center text-gray-400">No staking pools available</div>
+                    <div className="p-8 text-center text-zinc-400">
+                      <Layers className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                      <p className="mb-2">No staking pools available</p>
+                      <p className="text-sm text-zinc-500">Check back later or refresh to update</p>
+                    </div>
                   ) : (
-                    <div className="divide-y divide-zinc-800">
+                    <div className="divide-y divide-zinc-800/50">
                       {pools.map((pool) => (
-                        <div
+                        <motion.div
                           key={pool.id}
-                          className={`p-4 hover:bg-zinc-800/50 transition-colors cursor-pointer ${
-                            activePool === pool.id ? "bg-zinc-800/50" : ""
-                          }`}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.3 }}
+                          className={`p-4 hover:bg-zinc-800/30 transition-colors cursor-pointer ${activePool === pool.id ? "bg-zinc-800/50 border-l-2 border-orange-500" : ""
+                            }`}
                           onClick={() => setActivePool(pool.id)}
                         >
                           <div className="flex justify-between items-center mb-2">
                             <h3 className="font-medium flex items-center">
+                              <div className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mr-2 text-xs text-orange-400">
+                                {pool.id}
+                              </div>
                               Pool #{pool.id}
                               <span className="ml-2 text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full">
                                 {pool.APY}% APY
                               </span>
                             </h3>
-                            <div className="flex items-center text-sm text-gray-400">
+                            <div className="flex items-center text-sm text-zinc-400">
                               <Lock className="w-3 h-3 mr-1" />
                               {pool.lockDays} days lock
                             </div>
                           </div>
-                            <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                                <div>
-                                    <div className="text-gray-400">Staked Token Address:</div>
-                                    <div className="text-xs text-white">{formatAddress(pool.stakedToken)}</div>
-                                </div>
-                                <div>
-                                    <div className="text-gray-400">Reward Token Address:</div>
-                                    <div className="text-xs text-white">{formatAddress(pool.rewardToken)}</div>
-                                </div>
+
+                          <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                            <div>
+                              <div className="text-zinc-400 flex items-center mb-1">
+                                <span className="w-2 h-2 bg-orange-500/50 rounded-full mr-1"></span>
+                                Staked Token:
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-white font-medium">
+                                  {tokenSymbols[pool.stakedToken] || "???"}
+                                </span>
+                                <a
+                                  href={`https://etherscan.io/address/${pool.stakedToken}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-1 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="w-3 h-3 inline" />
+                                </a>
+                              </div>
                             </div>
-                          <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                            <div className="text-gray-400">
-                              Stake:
-                              <span className="ml-1 text-white">
-                                {tokenSymbols[pool.stakedToken] || formatAddress(pool.stakedToken)}
-                              </span>
-                            </div>
-                            <div className="text-gray-400">
-                              Reward:
-                              <span className="ml-1 text-white">
-                                {tokenSymbols[pool.rewardToken] || formatAddress(pool.rewardToken)}
-                              </span>
+                            <div>
+                              <div className="text-zinc-400 flex items-center mb-1">
+                                <span className="w-2 h-2 bg-orange-500/50 rounded-full mr-1"></span>
+                                Reward Token:
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-white font-medium">
+                                  {tokenSymbols[pool.rewardToken] || "???"}
+                                </span>
+                                <a
+                                  href={`https://etherscan.io/address/${pool.rewardToken}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-1 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <ExternalLink className="w-3 h-3 inline" />
+                                </a>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="bg-zinc-800/50 rounded-lg p-3">
+                          <div className="bg-zinc-800/50 rounded-xl p-3 border border-zinc-700/30">
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm text-gray-400">Your Position</span>
+                              <span className="text-sm text-zinc-400">Your Position</span>
                               {pool.isLocked ? (
-                                <span className="text-xs flex items-center text-orange-400">
+                                <span className="text-xs flex items-center text-orange-400 bg-orange-500/10 px-2 py-0.5 rounded-full">
                                   <Clock className="w-3 h-3 mr-1" />
                                   {pool.lockTimeRemaining}
                                 </span>
                               ) : (
-                                <span className="text-xs flex items-center text-green-400">
+                                <span className="text-xs flex items-center text-green-400 bg-green-500/10 px-2 py-0.5 rounded-full">
                                   <Unlock className="w-3 h-3 mr-1" />
                                   Unlocked
                                 </span>
                               )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-2 mb-3">
+                            <div className="grid grid-cols-2 gap-4 mb-3">
                               <div>
-                                <div className="text-xs text-gray-400">Staked</div>
-                                <div className="font-medium">
-                                  {Number.parseFloat(pool.userStaked).toFixed(4)} {tokenSymbols[pool.stakedToken]}
+                                <div className="text-xs text-zinc-400 mb-1">Staked</div>
+                                <div className="font-medium flex items-center">
+                                  <BarChart3 className="w-4 h-4 text-orange-500 mr-1" />
+                                  {Number.parseFloat(pool.userStaked).toFixed(4)}{" "}
+                                  <span className="text-zinc-400 ml-1">{tokenSymbols[pool.stakedToken]}</span>
                                 </div>
                               </div>
                               <div>
-                                <div className="text-xs text-gray-400">Pending Rewards</div>
-                                <div className="font-medium text-orange-400">
-                                  {Number.parseFloat(pool.pendingReward).toFixed(4)} {tokenSymbols[pool.rewardToken]}
+                                <div className="text-xs text-zinc-400 mb-1">Pending Rewards</div>
+                                <div className="font-medium flex items-center text-orange-400">
+                                  <Award className="w-4 h-4 mr-1" />
+                                  {Number.parseFloat(pool.pendingReward).toFixed(4)}{" "}
+                                  <span className="text-zinc-400 ml-1">{tokenSymbols[pool.rewardToken]}</span>
                                 </div>
                               </div>
                             </div>
 
                             <div className="flex space-x-2">
-                              <button
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleClaimRewards(pool.id)
                                 }}
                                 disabled={Number.parseFloat(pool.pendingReward) <= 0 || isClaiming}
-                                className="text-xs bg-orange-500 hover:bg-orange-600 disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-3 py-1.5 rounded-lg flex items-center transition-colors flex-1 justify-center"
+                                className="text-xs bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 disabled:from-zinc-700 disabled:to-zinc-600 disabled:text-zinc-400 text-white px-3 py-1.5 rounded-lg flex items-center transition-colors flex-1 justify-center shadow-md shadow-orange-500/10"
                               >
                                 {isClaiming && activePool === pool.id ? (
                                   <RefreshCw className="w-3 h-3 animate-spin mr-1" />
@@ -613,10 +803,12 @@ const UserDashboard = () => {
                                   <Award className="w-3 h-3 mr-1" />
                                 )}
                                 Claim Rewards
-                              </button>
+                              </motion.button>
 
                               {Number.parseFloat(pool.userStaked) > 0 && (
-                                <button
+                                <motion.button
+                                  whileHover={{ scale: 1.02 }}
+                                  whileTap={{ scale: 0.98 }}
                                   onClick={(e) => {
                                     e.stopPropagation()
                                     handleEmergencyWithdraw(pool.id)
@@ -630,11 +822,11 @@ const UserDashboard = () => {
                                     <AlertTriangle className="w-3 h-3 mr-1" />
                                   )}
                                   Emergency
-                              </button>
+                                </motion.button>
                               )}
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
                     </div>
                   )}
@@ -642,8 +834,11 @@ const UserDashboard = () => {
               </div>
 
               <div>
-                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden sticky top-4">
-                  <div className="p-4 border-b border-zinc-800">
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl overflow-hidden sticky top-4 shadow-xl">
+                  <div className="p-4 border-b border-zinc-800 flex items-center">
+                    <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center mr-2 text-orange-400">
+                      {activePool}
+                    </div>
                     <h2 className="text-xl font-semibold">
                       {pools[activePool] ? <>Pool #{activePool} Actions</> : <>Actions</>}
                     </h2>
@@ -652,29 +847,33 @@ const UserDashboard = () => {
                   <div className="p-4">
                     <div className="mb-6">
                       <h3 className="font-medium mb-3 flex items-center">
-                        <Plus className="w-4 h-4 mr-1 text-green-400" />
+                        <Plus className="w-4 h-4 mr-2 text-green-400" />
                         Deposit Tokens
                       </h3>
 
                       {pools[activePool] && (
-  <div className="mb-3 text-sm">
-    <div className="flex justify-between">
-      <span className="text-gray-400">Available Balance:</span>
-      <span>
-        {tokenBalances[pools[activePool].stakedToken] !== undefined ? (
-          <>
-            {ethers.formatEther(tokenBalances[pools[activePool].stakedToken]) === "0.0"
-              ? "0"
-              : ethers.formatEther(tokenBalances[pools[activePool].stakedToken])}{" "}
-            {tokenSymbols[pools[activePool].stakedToken]}
-          </>
-        ) : (
-          "0"
-        )}
-      </span>
-    </div>
-  </div>
-)}
+                        <div className="mb-3 text-sm bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/30">
+                          <div className="flex justify-between items-center">
+                            <span className="text-zinc-400 flex items-center">
+                              <Info className="w-3 h-3 mr-1" /> Available Balance:
+                            </span>
+                            <span className="font-medium">
+                              {tokenBalances[pools[activePool].stakedToken] !== undefined ? (
+                                <>
+                                  {ethers.formatEther(tokenBalances[pools[activePool].stakedToken]) === "0.0"
+                                    ? "0"
+                                    : Number(ethers.formatEther(tokenBalances[pools[activePool].stakedToken])).toFixed(
+                                      4,
+                                    )}{" "}
+                                  <span className="text-zinc-400">{tokenSymbols[pools[activePool].stakedToken]}</span>
+                                </>
+                              ) : (
+                                "0"
+                              )}
+                            </span>
+                          </div>
+                        </div>
+                      )}
 
                       <form onSubmit={handleApproveAndDeposit}>
                         <div className="mb-3">
@@ -684,22 +883,24 @@ const UserDashboard = () => {
                               value={depositAmount}
                               onChange={(e) => setDepositAmount(e.target.value)}
                               placeholder="0.0"
-                              className="bg-zinc-800 border border-zinc-700 rounded-l-lg p-2 w-full text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                              className="bg-zinc-800 border border-zinc-700 rounded-l-lg p-3 w-full text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
                             />
                             <button
                               type="button"
                               onClick={setMaxDeposit}
-                              className="bg-zinc-700 hover:bg-zinc-600 text-white px-3 rounded-r-lg transition-colors"
+                              className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 rounded-r-lg transition-colors font-medium"
                             >
                               MAX
                             </button>
                           </div>
                         </div>
 
-                        <button
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           type="submit"
                           disabled={isDepositing || !depositAmount}
-                          className="w-full bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                          className="w-full bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 disabled:from-zinc-700 disabled:to-zinc-600 disabled:text-zinc-400 text-white py-3 px-4 rounded-lg flex items-center justify-center transition-colors font-medium shadow-lg shadow-orange-500/10"
                         >
                           {isApproving && isDepositing ? (
                             <>
@@ -711,32 +912,37 @@ const UserDashboard = () => {
                               <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                               Depositing...
                             </>
+                          ) : checkApprovalNeeded(activePool, depositAmount) ? (
+                            <>Approve & Deposit</>
                           ) : (
                             <>Deposit</>
                           )}
-                        </button>
+                        </motion.button>
                       </form>
                     </div>
 
-                    <div>
+                    <div className="pt-4 border-t border-zinc-800/50">
                       <h3 className="font-medium mb-3 flex items-center">
-                        <Minus className="w-4 h-4 mr-1 text-red-400" />
+                        <Minus className="w-4 h-4 mr-2 text-red-400" />
                         Withdraw Tokens
                       </h3>
 
                       {pools[activePool] && (
-                        <div className="mb-3 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Staked Balance:</span>
-                            <span>
-                              {pools[activePool].userStaked} {tokenSymbols[pools[activePool].stakedToken]}
+                        <div className="mb-3 text-sm bg-zinc-800/50 rounded-lg p-3 border border-zinc-700/30">
+                          <div className="flex justify-between items-center">
+                            <span className="text-zinc-400 flex items-center">
+                              <Info className="w-3 h-3 mr-1" /> Staked Balance:
+                            </span>
+                            <span className="font-medium">
+                              {Number(pools[activePool].userStaked).toFixed(4)}{" "}
+                              <span className="text-zinc-400">{tokenSymbols[pools[activePool].stakedToken]}</span>
                             </span>
                           </div>
 
                           {pools[activePool].isLocked && (
-                            <div className="mt-1 text-orange-400 flex items-center text-xs">
+                            <div className="mt-2 text-orange-400 flex items-center text-xs bg-orange-500/10 p-2 rounded-lg">
                               <Lock className="w-3 h-3 mr-1" />
-                              {pools[activePool].lockTimeRemaining}
+                              {pools[activePool].lockTimeRemaining} - Emergency withdrawal available with penalty
                             </div>
                           )}
                         </div>
@@ -750,19 +956,41 @@ const UserDashboard = () => {
                               value={withdrawAmount}
                               onChange={(e) => setWithdrawAmount(e.target.value)}
                               placeholder="0.0"
-                              className="bg-zinc-800 border border-zinc-700 rounded-l-lg p-2 w-full text-white focus:outline-none focus:ring-1 focus:ring-orange-500"
+                              className="bg-zinc-800 border border-zinc-700 rounded-l-lg p-3 w-full text-white focus:outline-none focus:ring-1 focus:ring-orange-500 transition-all"
                             />
                             <button
                               type="button"
                               onClick={setMaxWithdraw}
-                              className="bg-zinc-700 hover:bg-zinc-600 text-white px-3 rounded-r-lg transition-colors"
+                              className="bg-zinc-700 hover:bg-zinc-600 text-white px-4 rounded-r-lg transition-colors font-medium"
                             >
                               MAX
                             </button>
                           </div>
                         </div>
 
-                        <button
+                        <motion.button
+                          whileHover={
+                            !(
+                              isWithdrawing ||
+                              !withdrawAmount ||
+                              (pools[activePool] && pools[activePool].isLocked) ||
+                              (pools[activePool] &&
+                                Number.parseFloat(withdrawAmount) > Number.parseFloat(pools[activePool].userStaked))
+                            )
+                              ? { scale: 1.02 }
+                              : {}
+                          }
+                          whileTap={
+                            !(
+                              isWithdrawing ||
+                              !withdrawAmount ||
+                              (pools[activePool] && pools[activePool].isLocked) ||
+                              (pools[activePool] &&
+                                Number.parseFloat(withdrawAmount) > Number.parseFloat(pools[activePool].userStaked))
+                            )
+                              ? { scale: 0.98 }
+                              : {}
+                          }
                           type="submit"
                           disabled={
                             isWithdrawing ||
@@ -771,7 +999,7 @@ const UserDashboard = () => {
                             (pools[activePool] &&
                               Number.parseFloat(withdrawAmount) > Number.parseFloat(pools[activePool].userStaked))
                           }
-                          className="w-full bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                          className="w-full bg-gradient-to-r from-orange-600 to-orange-400 hover:from-orange-500 hover:to-orange-300 disabled:from-zinc-700 disabled:to-zinc-600 disabled:text-zinc-400 text-white py-3 px-4 rounded-lg flex items-center justify-center transition-colors font-medium shadow-lg shadow-orange-500/10"
                         >
                           {isWithdrawing ? (
                             <>
@@ -779,14 +1007,17 @@ const UserDashboard = () => {
                               Withdrawing...
                             </>
                           ) : pools[activePool] && pools[activePool].isLocked ? (
-                            <>Locked</>
+                            <div className="flex items-center">
+                              <Lock className="w-4 h-4 mr-2" />
+                              Locked
+                            </div>
                           ) : (
                             <>Withdraw</>
                           )}
-                        </button>
+                        </motion.button>
 
                         {pools[activePool] && pools[activePool].isLocked && (
-                          <div className="mt-2 text-xs text-gray-400 text-center">
+                          <div className="mt-2 text-xs text-zinc-400 text-center">
                             You can use Emergency Withdraw with a penalty
                           </div>
                         )}
@@ -799,30 +1030,59 @@ const UserDashboard = () => {
 
             {/* Notifications Section */}
             <div className="mt-8">
-              <h2 className="text-2xl font-semibold mb-4">Notifications</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-semibold flex items-center">
+                  <Bell className="w-5 h-5 text-orange-500 mr-2" />
+                  Notifications
+                </h2>
+                {notifications.length > 0 && (
+                  <span className="text-sm text-zinc-400">{notifications.length} notifications</span>
+                )}
+              </div>
+
               {notifications.length === 0 ? (
-                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-4 text-center text-gray-400">
-                  No notifications available.
+                <div className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-8 text-center text-zinc-400">
+                  <Bell className="w-12 h-12 text-zinc-600 mx-auto mb-3" />
+                  <p className="mb-2">No notifications available</p>
+                  <p className="text-sm text-zinc-500">Your activity will appear here</p>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {notifications.map((notification, index) => (
-                    <div
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {notifications.slice(0, 6).map((notification, index) => (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
                       key={index}
-                      className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-xl p-4"
+                      className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 hover:border-orange-500/30 rounded-xl p-4 transition-colors"
                     >
                       <div className="flex justify-between items-center mb-2">
-                        <div className="text-sm text-gray-400">
-                          Pool #{notification.poolId} - {formatAddress(notification.sender)}
+                        <div className="flex items-center">
+                          <div className="w-6 h-6 rounded-full bg-orange-500/20 flex items-center justify-center mr-2 text-xs text-orange-400">
+                            {notification.poolId}
+                          </div>
+                          <span className="text-sm text-zinc-300">Pool #{notification.poolId}</span>
                         </div>
-                        <div className="text-xs text-gray-500">{formatDate(notification.timestamp)}</div>
+                        <div className="text-xs text-zinc-500">{formatDate(notification.timestamp)}</div>
                       </div>
-                      <p className="text-white">{notification.message}</p>
+                      <p className="text-white text-sm mb-1">{notification.message}</p>
                       {notification.amount !== "0.0" && (
-                        <div className="text-sm text-orange-400">Amount: {notification.amount}</div>
+                        <div className="text-sm text-orange-400 flex items-center">
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          Amount: {notification.amount}
+                        </div>
                       )}
-                    </div>
+                    </motion.div>
                   ))}
+                </div>
+              )}
+
+              {notifications.length > 6 && (
+                <div className="mt-4 text-center">
+                  <button className="text-orange-400 hover:text-orange-300 transition-colors text-sm flex items-center mx-auto">
+                    View all notifications
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </button>
                 </div>
               )}
             </div>
