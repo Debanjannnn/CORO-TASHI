@@ -429,7 +429,7 @@ const UserDashboard = () => {
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="flex flex-col md:flex-row justify-between items-center mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-4 md:mb-0">
-            CORE <span className="text-orange-500">DAO</span> Dashboard
+            CORO <span className="text-orange-500">TASHI</span> Dashboard
           </h1>
 
           {!isConnected ? (

@@ -344,27 +344,12 @@ const AdminDashboard = () => {
           animate={{ rotate: 360 }}
           transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
         />
-        <div className="absolute inset-5">
-          <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-            {/* Outer hexagon */}
-            <motion.path
-              d="M50 5 L95 30 L95 70 L50 95 L5 70 L5 30 Z"
-              fill="none"
-              stroke="#f97316"
-              strokeWidth="4"
-              initial={{ pathLength: 0 }}
-              animate={{ pathLength: 1 }}
-              transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY }}
-            />
-            {/* Inner hexagon */}
-            <path d="M50 20 L80 35 L80 65 L50 80 L20 65 L20 35 Z" fill="none" stroke="#f97316" strokeWidth="3" />
-            {/* Cube - front face */}
-            <path d="M50 40 L70 50 L70 70 L50 80 Z" fill="#f97316" opacity="0.7" />
-            {/* Cube - top edge */}
-            <path d="M50 40 L30 50 L50 60 L70 50 Z" fill="none" stroke="#f97316" strokeWidth="3" />
-            {/* Cube - side edge */}
-            <path d="M50 60 L50 80 L30 70 L30 50 Z" fill="none" stroke="#f97316" strokeWidth="3" />
-          </svg>
+        <div className="absolute inset-0 flex items-center justify-center">
+          <img
+            src="/image.png"
+            alt="CORO TASHI Logo"
+            className="w-28 h-28 object-contain"
+          />
         </div>
       </div>
       <motion.h1
@@ -373,7 +358,7 @@ const AdminDashboard = () => {
         transition={{ delay: 0.3, duration: 0.5 }}
         className="text-3xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent"
       >
-        CORE <span className="text-orange-600">DAO</span>
+        CORO <span className="text-orange-600">TASHI</span>
       </motion.h1>
       <motion.p
         initial={{ opacity: 0 }}
@@ -397,10 +382,12 @@ const AdminDashboard = () => {
             animate={{ rotate: 360 }}
             transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
           />
-          <div className="absolute inset-3">
-            <svg viewBox="0 0 100 100" className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="none" stroke="#f97316" strokeWidth="4" />
-            </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img
+              src="/image.png"
+              alt="CORO TASHI Logo"
+              className="w-14 h-14 object-contain"
+            />
           </div>
         </div>
         <p className="text-orange-400 font-medium">Loading data...</p>
@@ -416,23 +403,18 @@ const AdminDashboard = () => {
       }`}
     >
       <div className="p-4 border-b border-zinc-800/30 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-md flex items-center justify-center relative overflow-hidden bg-black/40 border border-orange-500/30">
-          <svg viewBox="0 0 100 100" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
-            <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" fill="none" stroke="#f97316" strokeWidth="3" />
-            <path
-              d="M50 30 L70 40 L70 60 L50 70 L30 60 L30 40 Z"
-              fill="#f97316"
-              fillOpacity="0.2"
-              stroke="#f97316"
-              strokeWidth="2"
+        <div className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden bg-black/40 border border-orange-500/30">
+        <img
+              src="/image.png"
+              alt="CORO TASHI Logo"
+              className="w-14 h-14 object-contain "
             />
-          </svg>
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent"></div>
         </div>
         {sidebarOpen && (
           <div>
             <h1 className="text-xl font-bold text-white bg-gradient-to-r from-orange-500 to-orange-300 bg-clip-text text-transparent">
-              CORE <span className="text-orange-600">DAO</span>
+              CORO <span className="text-orange-600">TASHI</span>
             </h1>
             <p className="text-xs text-zinc-400">Admin Dashboard</p>
           </div>
@@ -1150,7 +1132,7 @@ const AdminDashboard = () => {
                                       <div className="flex justify-between items-center">
                                         <span className="text-xs text-zinc-500">Contract Address</span>
                                         <a
-                                          href={`https://scan.test2.btcs.network/address/${pool.stakedToken}`}
+                                          href={`https://etherscan.io/address/${pool.stakedToken}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs text-orange-400 hover:text-orange-300 flex items-center"
