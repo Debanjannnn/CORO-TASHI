@@ -188,17 +188,18 @@ const AdminDashboard = () => {
     }
   }
 
-  // Deposit Rewards
+  // Deposit Rewards - Fixed implementation using the contract's depositRewards function
   const handleDepositRewards = async () => {
     try {
       setLoading(true)
       const contract = await connectContract()
       if (!contract) return
 
-      const poolId = rewardDeposit.poolId
+      const poolId = Number.parseInt(rewardDeposit.poolId)
       const amount = ethers.parseEther(rewardDeposit.amount)
 
-      const pool = pools.find((p) => p.id === Number.parseInt(poolId))
+      // Get the pool to find the reward token
+      const pool = pools.find((p) => p.id === poolId)
       if (!pool) {
         setMessage({ type: "error", text: "Pool not found" })
         return
@@ -206,24 +207,36 @@ const AdminDashboard = () => {
 
       const rewardTokenContract = await getTokenContract(pool.rewardToken)
       if (!rewardTokenContract) {
-        setMessage({ type: "error", text: "Could not connect to reward token contract." })
+        setMessage({ type: "error", text: "Could not connect to reward token contract" })
         return
       }
 
+      // Check user's balance of reward token
       const balance = await rewardTokenContract.balanceOf(account)
-      console.log(ethers.formatEther(balance))
+      if (balance < amount) {
+        setMessage({
+          type: "error",
+          text: `Insufficient balance. You have ${ethers.formatEther(balance)} ${pool.rewardTokenSymbol}`,
+        })
+        return
+      }
 
-      await rewardTokenContract.approve(CONTRACT_ADDRESS, amount)
-      setMessage({ type: "info", text: "Approve reward token to contract... Please wait for confirmation" })
+      // First approve the contract to spend tokens
+      setMessage({ type: "info", text: "Approving tokens... Please confirm the transaction in your wallet" })
+      const approveTx = await rewardTokenContract.approve(CONTRACT_ADDRESS, amount)
+      await approveTx.wait()
 
+      // Check if allowance is sufficient
       const allowance = await rewardTokenContract.allowance(account, CONTRACT_ADDRESS)
-      if (allowance < amount) return
-      console.log(ethers.formatEther(allowance))
+      if (allowance < amount) {
+        setMessage({ type: "error", text: "Approval failed. Please try again." })
+        return
+      }
 
-      setMessage({ type: "info", text: `Transferring rewards to pool ${poolId}...` })
-
-      const tx = await rewardTokenContract.transfer(CONTRACT_ADDRESS, amount)
-      await tx.wait()
+      // Now call the contract's depositRewards function
+      setMessage({ type: "info", text: `Depositing rewards to pool ${poolId}... Please confirm the transaction` })
+      const depositTx = await contract.depositRewards(poolId, amount)
+      await depositTx.wait()
 
       setMessage({ type: "success", text: "Rewards deposited successfully!" })
       setRewardDeposit({ poolId: "0", amount: "" })
@@ -345,11 +358,7 @@ const AdminDashboard = () => {
           transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <img
-            src="/image.png"
-            alt="CORO TASHI Logo"
-            className="w-28 h-28 object-contain"
-          />
+          <img src="/image.png" alt="CORO TASHI Logo" className="w-28 h-28 object-contain" />
         </div>
       </div>
       <motion.h1
@@ -383,11 +392,7 @@ const AdminDashboard = () => {
             transition={{ duration: 1.5, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
           />
           <div className="absolute inset-0 flex items-center justify-center">
-            <img
-              src="/image.png"
-              alt="CORO TASHI Logo"
-              className="w-14 h-14 object-contain"
-            />
+            <img src="/image.png" alt="CORO TASHI Logo" className="w-14 h-14 object-contain" />
           </div>
         </div>
         <p className="text-orange-400 font-medium">Loading data...</p>
@@ -404,11 +409,7 @@ const AdminDashboard = () => {
     >
       <div className="p-4 border-b border-zinc-800/30 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full flex items-center justify-center relative overflow-hidden bg-black/40 border border-orange-500/30">
-        <img
-              src="/image.png"
-              alt="CORO TASHI Logo"
-              className="w-14 h-14 object-contain "
-            />
+          <img src="/image.png" alt="CORO TASHI Logo" className="w-14 h-14 object-contain " />
           <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent"></div>
         </div>
         {sidebarOpen && (
