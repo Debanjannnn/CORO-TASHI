@@ -123,6 +123,7 @@ const UserDashboard = () => {
 
       for (let i = 0; i < poolCount; i++) {
         const pool = await contractInstance.poolInfo(i)
+        console.log(pool);
         const userInfo = await contractInstance.userInfo(i, userAccount)
         const pendingReward = await contractInstance.pendingReward(i, userAccount)
 
@@ -171,6 +172,7 @@ const UserDashboard = () => {
           stakedToken: pool.stakedToken,
           rewardToken: pool.rewardToken,
           totalStaked: ethers.formatEther(pool.totalStaked),
+          liquidity: ethers.formatEther(pool[3]),
           APY: Number(pool.APY),
           lockDays: Number(pool.lockDays),
           userStaked: ethers.formatEther(userInfo.amount),
@@ -179,7 +181,11 @@ const UserDashboard = () => {
           isLocked,
           lockTimeRemaining,
         })
+
+       console.log("LIQUIDTY", ethers.formatEther(pool[3]));
       }
+
+      
 
       // At the end, update the state
       setPools(poolsData)
