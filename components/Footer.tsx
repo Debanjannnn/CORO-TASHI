@@ -32,7 +32,7 @@ export default function Footer() {
     {
       title: "Company",
       links: [
-        { name: "About", href: "" },
+        { name: "About", href: "https://linktr.ee/COROTASHI" },
         { name: "Contact", href: "mailto:corotashi@gmail.com" },
       ],
     },
