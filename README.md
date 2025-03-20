@@ -15,6 +15,10 @@ Welcome to **Coro Tashi**, a next-generation DeFi staking protocol by **CoreDAO*
 3. **Earn rewards** automatically.
 4. **Unstake anytime** with an optional penalty.
 
+ ##Contract address
+ 1.TBTC : https://scan.test2.btcs.network/address/0xF8Bdce16c4c5Bd375a2e9F79F007c95080FC3c2D
+ 2.REWARD TOKEN : https://scan.test2.btcs.network/address/0x83A49FF8f630d45D4C3b61DEE6D72B01599C0a85
+
 ## Getting Started
 
 ### Clone the Repository
