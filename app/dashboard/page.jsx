@@ -14,7 +14,7 @@ import {
   Minus,
   Award,
 } from "lucide-react"
-import { CONTRACT_ADDRESS } from "@/utils/constants"
+import { CONTRACT_ADDRESS, CORE_TESTNET_CHAIN_ID, CORE_TESTNET_PARAMS } from "@/utils/constants"
 import abi from "@/utils/abi"
 import ERC20_ABI from "@/utils/erc20abi"
 
@@ -54,6 +54,35 @@ const UserDashboard = () => {
         setIsConnected(true)
         const contractInstance = new ethers.Contract(CONTRACT_ADDRESS, abi, signerInstance)
         setContract(contractInstance)
+
+        // **CHAIN SWITCHING LOGIC HERE**
+        try {
+          await window.ethereum.request({
+            method: "wallet_switchEthereumChain",
+            params: [{ chainId: CORE_TESTNET_CHAIN_ID }],
+          });
+        } catch (switchError) {
+          // This error code indicates that the chain has not been added to MetaMask.
+          if (switchError.code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: "wallet_addEthereumChain",
+                params: [CORE_TESTNET_PARAMS],
+              });
+            } catch (addError) {
+              console.error("Error adding chain:", addError);
+              setError("Failed to add Core Testnet to MetaMask.  Please add it manually.");
+              setLoading(false);
+              return;  // Important:  Exit the function if adding fails.
+            }
+          } else {
+            console.error("Error switching chain:", switchError);
+            setError("Failed to switch to Core Testnet. " + (switchError.message || ""));
+            setLoading(false);
+            return; // Exit if switching fails.
+          }
+        }
+
         await fetchData(contractInstance, accounts[0], signerInstance)
       } else {
         setError("Please install MetaMask to use this dApp")
@@ -65,7 +94,6 @@ const UserDashboard = () => {
       setLoading(false)
     }
   }
-
   const fetchData = async (contractInstance, userAccount, signerInstance) => {
     try {
       setLoading(true)
