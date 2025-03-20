@@ -1132,7 +1132,7 @@ const AdminDashboard = () => {
                                       <div className="flex justify-between items-center">
                                         <span className="text-xs text-zinc-500">Contract Address</span>
                                         <a
-                                          href={`https://etherscan.io/address/${pool.stakedToken}`}
+                                          href={`https://scan.test2.btcs.network/address/${pool.stakedToken}`}
                                           target="_blank"
                                           rel="noopener noreferrer"
                                           className="text-xs text-orange-400 hover:text-orange-300 flex items-center"

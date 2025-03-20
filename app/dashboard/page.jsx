@@ -747,7 +747,7 @@ const UserDashboard = () => {
                                   {tokenSymbols[pool.stakedToken] || "???"}
                                 </span>
                                 <a
-                                  href={`https://etherscan.io/address/${pool.stakedToken}`}
+                                  href={`https://scan.test2.btcs.network/address/${pool.stakedToken}`}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="ml-1 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
