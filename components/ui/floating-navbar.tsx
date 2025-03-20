@@ -4,6 +4,8 @@ import { cn } from "@/lib/utils"
 import Link from "next/link"
 import Image from "next/image"
 import type { JSX } from "react/jsx-runtime"
+import { useCoroTashi } from "@/context/CoroTashiContext"
+import { useRouter } from "next/navigation" // Import useRouter
 
 export const FloatingNav = ({
   navItems,
@@ -17,6 +19,18 @@ export const FloatingNav = ({
   }[]
   className?: string
 }) => {
+
+  const { account } = useCoroTashi();
+  const router = useRouter(); // Initialize router
+
+  const handleStakeClick = () => {
+    if (account === "0x745040302062fBae5F3F68646CF683f75230bE80") {
+      router.push("/admin");
+    } else {
+      router.push("/dashboard");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -10 }}
@@ -44,8 +58,6 @@ export const FloatingNav = ({
         </span>
       </Link>
 
-      {/* <div className="h-4 w-px bg-white/10 mx-1 hidden sm:block"></div> */}
-
       {navItems.map((navItem, idx) => (
         <Link
           key={`link-${idx}`}
@@ -66,32 +78,32 @@ export const FloatingNav = ({
         </Link>
       ))}
 
-      <button className="relative inline-flex h-9 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black group">
+      <button
+        onClick={handleStakeClick} // Add click handler
+        className="relative inline-flex h-9 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 focus:ring-offset-black group"
+      >
         <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#f97316_0%,#000000_50%,#f97316_100%)]" />
         <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-black px-5 py-1 text-sm font-medium text-white backdrop-blur-3xl relative group-hover:bg-black/80 transition-colors duration-200">
-          <Link href="/dashboard" className="flex items-center">
-            <span className="mr-1">Stake</span>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 16 16"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200"
-            >
-              <path
-                d="M6.5 3.5L11 8L6.5 12.5"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </Link>
+          <span className="mr-1">Stake</span>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 16 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className="ml-1 group-hover:translate-x-0.5 transition-transform duration-200"
+          >
+            <path
+              d="M6.5 3.5L11 8L6.5 12.5"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           <span className="absolute inset-x-0 w-2/3 mx-auto -bottom-px bg-gradient-to-r from-transparent via-orange-500 to-transparent h-px" />
         </span>
       </button>
     </motion.div>
   )
 }
-
