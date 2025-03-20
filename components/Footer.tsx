@@ -8,7 +8,7 @@ export default function Footer() {
     {
       title: "Products",
       links: [
-        { name: "Yield Optimizer", href: "#" },
+        { name: "TASHIBTC Testnet Faucet", href: "https://coro-tashi-faucet.vercel.app/" },
         { name: "Liquidity Pools", href: "#" },
         { name: "Staking Dashboard", href: "#" },
         { name: "Analytics", href: "#" },
@@ -17,8 +17,8 @@ export default function Footer() {
     {
       title: "Resources",
       links: [
-        { name: "Documentation", href: "https://kaushiks-organization.gitbook.io/coro-tashi" },
-        { name: "Tutorials", href: "#" },
+        { name: "Documentation", href: "https://coro-tashi.gitbook.io/coro-tashi" },
+        { name: "Tutorials", href: "https://www.youtube.com/@CoroTashi" },
       ],
     },
     {
@@ -32,10 +32,8 @@ export default function Footer() {
     {
       title: "Company",
       links: [
-        { name: "About", href: "#" },
-        { name: "Careers", href: "#" },
-        { name: "Blog", href: "#" },
-        { name: "Contact", href: "#" },
+        { name: "About", href: "" },
+        { name: "Contact", href: "mailto:corotashi@gmail.com" },
       ],
     },
   ]
@@ -81,6 +79,7 @@ export default function Footer() {
                   <Link
                     key={link.name}
                     href={link.href}
+                    target="_blank"
                     className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-gray-400 hover:text-orange-400 hover:border-orange-500/50 transition-all duration-300"
                   >
                     <link.icon className="w-5 h-5" />
@@ -106,6 +105,7 @@ export default function Footer() {
                   <li key={link.name}>
                     <Link
                       href={link.href}
+                      target="_blank"
                       className="text-gray-400 hover:text-orange-400 text-sm flex items-center group transition-colors duration-300"
                     >
                       {link.name}
