@@ -169,7 +169,7 @@ const AdminDashboard = () => {
           APY: APY.toString(),
           lockDays: lockDays.toString(),
           // Use totalRewards from poolInfo instead of token balance
-          availableRewards: ethers.formatEther(totalRewardsBN),
+          availableRewards: (ethers.formatEther(totalRewardsBN)),
         })
       }
       
@@ -733,7 +733,7 @@ const AdminDashboard = () => {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="text-sm text-zinc-400">Total Staked</p>
-                                <h3 className="text-3xl font-bold text-white mt-1">{totalStaked}</h3>
+                                <h3 className="text-3xl font-bold text-white mt-1">{totalStaked} TBTC <small className="font-thin text-sm"> (wBTC)</small></h3>
                               </div>
                               <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
                                 <BarChart3 className="w-6 h-6 text-orange-500" />
@@ -768,7 +768,7 @@ const AdminDashboard = () => {
                             <div className="flex items-center justify-between">
                               <div>
                                 <p className="text-sm text-zinc-400">Available Rewards</p>
-                                <h3 className="text-3xl font-bold text-white mt-1">{totalRewards}</h3>
+                                <h3 className="text-3xl font-bold text-white mt-1">{totalRewards} TSI <br/>  <small className="font-thin text-sm"> (Tashi Staked Incentives) </small> </h3>
                               </div>
                               <div className="w-12 h-12 rounded-lg bg-orange-500/10 flex items-center justify-center">
                                 <CoinsIcon className="w-6 h-6 text-orange-500" />
