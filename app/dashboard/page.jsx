@@ -483,7 +483,7 @@ const UserDashboard = () => {
     if (error) {
       const timer = setTimeout(() => {
         setError(null)
-      }, 5000)
+      }, 55000)
 
       return () => clearTimeout(timer)
     }
