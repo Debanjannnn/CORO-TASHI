@@ -24,7 +24,7 @@ export function CoreStrengths() {
               CORO TASHI  leverages Core Chain, the first Bitcoin-aligned EVM-compatible Layer-1 blockchain. With
               its unique Satoshi Plus consensus, combining DPoW, DPoS, and Non- Custodial Bitcoin Staking, Core offers
               unparalleled security, scalability, and decentralization. This ensures high-performance and reliable
-              transactions using CORE, coreBTC, and stCORE tokens, making Corosuke Protocol a robust choice for modern
+              transactions using CORE, coreBTC, and stCORE tokens, making Coro Tashi a robust choice for modern
               financial applications.
             </p>
 
